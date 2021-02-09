@@ -18,16 +18,19 @@ class Sphere
 private:
     float radiance;
     vec3f position;
+    vec3f basecolor;
     MaterialType material;
 
 public:
-    Sphere(float r, vec3f p)
+    Sphere(float r, vec3f p) : radiance(r), position(p)
     {
-        radiance = r;
-        position = p;
-    }
+        basecolor = vec3f(1, 1, 1);
+        material = MaterialType::Diffuse;
+    };
 
-    bool hit(ray &r, IntersectInfo &info)
+    Sphere(float r, vec3f p, vec3f c, MaterialType type) : radiance(r), position(p), basecolor(c), material(type){};
+
+    bool hit(Ray &r, IntersectInfo &info)
     {
         float b = dot(r.getdirection(), r.getorigin() - position);
         vec3f alpha = r.getorigin() - position;
@@ -44,22 +47,28 @@ public:
         vec3f pos2 = r.post(t2);
         vec3f a1 = pos1 - r.getorigin();
         vec3f a2 = pos2 - r.getorigin();
-        if (a1.norm() < a2.norm())
+        float dis1 = a1.norm();
+        float dis2 = a2.norm();
+
+        if (dis1 < dis2 && dis1 > r.getkyoyou())
         {
+            info.distance = dis1;
+            vec3f rad = pos1 - position;
+            info.normal = normalize(rad);
             info.position = pos1;
-            vec3f tekitou = pos1 - position;
-            info.normal = normalize(tekitou);
-            info.distance = a1.norm();
             return true;
         }
-
+        else if (dis1 > dis2 && dis2 > r.getkyoyou())
+        {
+            info.distance = dis2;
+            vec3f rad = pos2 - position;
+            info.normal = normalize(rad);
+            info.position = pos2;
+            return true;
+        }
         else
         {
-            info.position = pos2;
-            vec3f tekitou = pos2 - position;
-            info.normal = normalize(tekitou);
-            info.distance = a2.norm();
-            return true;
+            return false;
         }
     }
 };

@@ -15,17 +15,24 @@ public:
         Sphere first(f, origin);
         sphere.push_back(first);
     }
+    Scene(){};
 
     void SphereAdd(vec3f origin, float f)
     {
         Sphere a(f, origin);
         sphere.push_back(a);
     }
+    void SphereAdd(vec3f origin, float f, vec3f color, MaterialType type)
+    {
+        Sphere a(f, origin, color, type);
+        sphere.push_back(a);
+    }
 
-    bool hit(ray &r, IntersectInfo &info)
+    bool hit(Ray &r, IntersectInfo &info)
     {
         float min = 10000;
         bool check = false;
+
         //各球に判定を行う
         for (int i = 0; i < sphere.size(); ++i)
         {
