@@ -6,5 +6,6 @@ struct IntersectInfo
     float distance;
     vec3f position;
     vec3f normal;
+    vec3f color;
 };
 #endif

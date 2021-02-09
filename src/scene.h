@@ -8,6 +8,7 @@ class Scene
 {
 private:
     vector<Sphere> sphere;
+    vec3f light;
 
 public:
     Scene(vec3f origin, float f)
@@ -17,12 +18,16 @@ public:
     }
     Scene(){};
 
-    void SphereAdd(vec3f origin, float f)
+    void LightAdd(const vec3f &l)
+    {
+        light = l;
+    }
+    void SphereAdd(const vec3f &origin, const float &f)
     {
         Sphere a(f, origin);
         sphere.push_back(a);
     }
-    void SphereAdd(vec3f origin, float f, vec3f color, MaterialType type)
+    void SphereAdd(const vec3f &origin, const float &f, const vec3f &color, const MaterialType &type)
     {
         Sphere a(f, origin, color, type);
         sphere.push_back(a);
@@ -38,7 +43,7 @@ public:
         {
             IntersectInfo checkinfo;
             //一番近い点を取得する。
-            if (sphere[i].hit(r, checkinfo))
+            if (sphere[i].hit(r, checkinfo, light))
             {
                 if (checkinfo.distance < min)
                 {

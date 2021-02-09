@@ -7,6 +7,8 @@
 #include "pinhole-camera.h"
 #include "sphere.h"
 #include "intersect-info.h"
+#include "color.h"
+
 using namespace std;
 using vec3f = vec3<float>;
 
@@ -18,9 +20,12 @@ int main()
 
   pincamera camera(vec3f(0, 0, 5), vec3f(0, 0, -1));
   Scene scene;
-  scene.SphereAdd(vec3f(-1, 0, 1), 1.0f);
-  scene.SphereAdd(vec3f(1, 0, -1), 1.0f);
+  vec3f light = vec3f(0, 1, 1);
+  light = normalize(light);
+  scene.SphereAdd(vec3f(-1, 0, 1), 1.0f, vec3f(1, 0, 0), MaterialType::Diffuse);
+  scene.SphereAdd(vec3f(1, 0, -1), 1.0f, vec3f(0, 1, 0), MaterialType::Diffuse);
   scene.SphereAdd(vec3f(0), 1.0f);
+  scene.LightAdd(light);
   for (int j = 0; j < height; ++j)
   {
     for (int i = 0; i < width; ++i)
@@ -32,7 +37,7 @@ int main()
       IntersectInfo info;
       if (scene.hit(r, info))
       {
-        img.SetPixel(i, j, 0.5f * info.normal + vec3f(0.5f));
+        img.SetPixel(i, j, info.color);
       }
       else
       {
