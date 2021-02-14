@@ -145,6 +145,7 @@ using vec3f = vec3<float>;
 template <typename T>
 inline vec3<T> refrect(vec3<T> &v, vec3<T> &n)
 {
+    v = -1 * v;
     vec3<T> ref;
     ref = -1 * v + 2 * dot(v, n) * n;
     return normalize(ref);
@@ -152,12 +153,14 @@ inline vec3<T> refrect(vec3<T> &v, vec3<T> &n)
 
 inline vec3f refraction(vec3f &v, float n1, vec3f &n, float n2)
 {
+    v = -1 * v;
     vec3f th = -(n1 / n2) * (v - dot(v, n) * n);
     float b = 1 - th.norm() * th.norm();
     if (b > 0)
     {
         return -sqrt(b) * n + th;
     }
+    v = -1 * v;
     return refrect(v, n);
 }
 #endif

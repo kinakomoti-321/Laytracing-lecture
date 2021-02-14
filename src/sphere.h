@@ -32,7 +32,7 @@ public:
 
     Sphere(float r, vec3f p, vec3f c, MaterialType type) : radiance(r), position(p), basecolor(c), material(type){};
 
-    bool hit(Ray &r, IntersectInfo &info, vec3f &light)
+    bool hit(Ray &r, IntersectInfo &info)
     {
         float b = dot(r.getdirection(), r.getorigin() - position);
         vec3f alpha = r.getorigin() - position;
@@ -45,35 +45,31 @@ public:
         float t1 = -b + sqrt(D);
         float t2 = -b - sqrt(D);
 
-        vec3f pos1 = r.post(t1);
-        vec3f pos2 = r.post(t2);
-        vec3f a1 = pos1 - r.getorigin();
-        vec3f a2 = pos2 - r.getorigin();
-        float dis1 = a1.norm();
-        float dis2 = a2.norm();
+        float t = t2;
+        if (t < 1e-3f || t > 10000)
+        {
+            t = t1;
+            if (t < 1e-3f || t > 10000)
+            {
+                return false;
+            }
+        }
+
+        info.distance = t;
+        info.position = r.post(t);
+        vec3f normal = info.position - position;
+        info.normal = normalize(normal);
         info.sphere = this;
-        if (dis1 < dis2 && dis1 > r.getkyoyou())
-        {
-            info.distance = dis1;
-            vec3f rad = pos1 - position;
-            info.normal = normalize(rad);
-            info.position = pos1;
-            vec3f getdirect = r.getdirection();
-            return true;
-        }
-        else if (dis1 > dis2 && dis2 > r.getkyoyou())
-        {
-            info.distance = dis2;
-            vec3f rad = pos2 - position;
-            info.normal = normalize(rad);
-            info.position = pos2;
-            vec3f getdirect = r.getdirection();
-            return true;
-        }
-        else
-        {
-            return false;
-        }
+        return true;
+    }
+
+    MaterialType getMaterial() const
+    {
+        return material;
+    }
+    vec3f getColor() const
+    {
+        return basecolor;
     }
 };
 #endif

@@ -8,7 +8,6 @@ class Scene
 {
 private:
     vector<Sphere> sphere;
-    vec3f light;
 
 public:
     Scene(vec3f origin, float f)
@@ -18,10 +17,6 @@ public:
     }
     Scene(){};
 
-    void LightAdd(const vec3f &l)
-    {
-        light = l;
-    }
     void SphereAdd(const vec3f &origin, const float &f)
     {
         Sphere a(f, origin);
@@ -42,7 +37,7 @@ public:
         {
             IntersectInfo checkinfo;
             //一番近い点を取得する。
-            if (sphere[i].hit(r, checkinfo, light))
+            if (sphere[i].hit(r, checkinfo))
             {
                 if (checkinfo.distance < min)
                 {
