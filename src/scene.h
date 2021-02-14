@@ -37,7 +37,6 @@ public:
     {
         float min = 10000;
         bool check = false;
-
         //各球に判定を行う
         for (int i = 0; i < sphere.size(); ++i)
         {
@@ -53,7 +52,6 @@ public:
                 }
             }
         }
-
         if (check)
         {
             return true;

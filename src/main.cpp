@@ -37,7 +37,6 @@ int main()
       IntersectInfo info;
       if (scene.hit(r, info))
       {
-        img.SetPixel(i, j, info.color);
       }
       else
       {
@@ -45,6 +44,10 @@ int main()
       }
     }
   }
+  vec3f n(0, 0, 1);
+  vec3f v(0, 1, 1);
+  v = normalize(v);
+  cout << v << refrect(v, n) << endl;
   img.writePPM("output.ppm");
   return 0;
 }
