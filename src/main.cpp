@@ -40,52 +40,53 @@ int main()
       img.SetPixel(i, j, raytracing(r, scene));
     }
   }
-  vec3f v(1, 2, 1);
-  v = normalize(v);
-  vec3f n(0, 0, 1);
-  cout << v << refraction(v, 0.9f, n, 1.0f) << endl;
   img.writePPM("output.ppm");
   return 0;
 }
 
-vec3f raytracing(Ray &ray, Scene &scene)
+vec3f raytracing(Ray &r, Scene &scene)
 {
+  int Max_Depth = 3;
   vec3f light(1, 1, 1);
   light = normalize(light);
   IntersectInfo info;
-  if (scene.hit(ray, info))
+  Ray ray = r;
+  for (int i = 1; i <= Max_Depth; ++i)
   {
-    MaterialType type = info.sphere->getMaterial();
-    if (type == MaterialType::Diffuse)
+    if (scene.hit(ray, info))
     {
-      Ray lightray(info.position, light);
-      if (scene.hit(lightray, info))
+      MaterialType type = info.sphere->getMaterial();
+      if (type == MaterialType::Diffuse)
       {
-        return vec3f(0.2, 0.2, 0.2);
-      }
-      else
-      {
+        Ray lightray(info.position, light);
 
-        return max(dot(light, info.normal), 0.0f) * info.sphere->getColor();
+        if (scene.hit(lightray, info))
+        {
+          return vec3f(0.2, 0.2, 0.2);
+        }
+        else
+        {
+          return max(dot(light, info.normal), 0.0f) * info.sphere->getColor();
+        }
+      }
+      else if (type == MaterialType::Glass)
+      {
+        vec3f direction = ray.getdirection();
+        vec3f rdirection = refraction(direction, 1.0f, info.normal, 0.7f);
+        ray = Ray(info.position, rdirection);
+      }
+      else if (type == MaterialType::Mirror)
+      {
+        vec3f direction = ray.getdirection();
+        vec3f rdirection = refrect(direction, info.normal);
+        ray = Ray(info.position, rdirection);
       }
     }
-    else if (type == MaterialType::Glass)
+    else
     {
-      vec3f direction = ray.getdirection();
-      // vec3f rdirection = refraction(direction, 1.0f, info.normal, 0.9f);
-      vec3f rdirection = refrect(direction, info.normal);
-      Ray ref(info.position, rdirection);
-      return raytracing(ref, scene);
-    }
-    else if (type == MaterialType::Mirror)
-    {
-
-      vec3f direction = ray.getdirection();
-      vec3f rdirection = refrect(direction, info.normal);
-      Ray ref(info.position, rdirection);
-      return raytracing(ref, scene);
+      return vec3f(0, 0, 0);
     }
   }
-  else
-    return vec3f(0, 0, 0);
+
+  return vec3f(0, 0, 0);
 }
