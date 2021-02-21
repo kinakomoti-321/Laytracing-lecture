@@ -2,51 +2,20 @@
 
 #include "image.h"
 #include "pinhole-camera.h"
+#include "rng.h"
 #include "scene.h"
-#define GRAY vec3f(0.1f, 0.1f, 0.1f)
-#define BLACK vec3f(0);
-#define White vec3f(1);
 
 // 光源の方向
 const Vec3f LIGHT_DIRECTION = normalize(Vec3f(0.5, 1, 0.5));
 
-<<<<<<< HEAD
-// 反射ベクトルの計算
-Vec3f reflect(const Vec3f &v, const Vec3f &n)
-{
-  return -v + 2.0f * dot(v, n) * n;
-}
-
-// 屈折ベクトルの計算
-Vec3f refract(const Vec3f &v, const Vec3f &n, float ior1, float ior2)
-{
-  return Vec3f(0);
-}
-
-=======
->>>>>>> 8660984dacb76ee330e572a4c65c33383a359efb
 // 古典的レイトレーシングの処理
-Vec3f raytrace(const Ray &ray_in, const Scene &scene)
-{
-  constexpr int MAX_DEPTH = 100; // 再帰の最大深さ
+Vec3f raytrace(const Ray& ray_in, const Scene& scene) {
+  constexpr int MAX_DEPTH = 100;  // 再帰の最大深さ
 
   Ray ray = ray_in;
-  Vec3f color(0); // 最終的な色
+  Vec3f color(0);  // 最終的な色
 
   IntersectInfo info;
-<<<<<<< HEAD
-  for (int i = 0; i < MAX_DEPTH; ++i)
-  {
-    if (scene.intersect(ray, info))
-    {
-      if (info.hitSphere->material_type == MaterialType::Mirror)
-      {
-        // 次のレイをセット
-        ray = Ray(info.hitPos, reflect(-ray.direction, info.hitNormal));
-      }
-      else if (info.hitSphere->material_type == MaterialType::Glass)
-      {
-=======
   for (int i = 0; i < MAX_DEPTH; ++i) {
     if (scene.intersect(ray, info)) {
       // ミラーの場合
@@ -56,21 +25,11 @@ Vec3f raytrace(const Ray &ray_in, const Scene &scene)
       }
       // ガラスの場合
       else if (info.hitSphere->material_type == MaterialType::Glass) {
->>>>>>> 8660984dacb76ee330e572a4c65c33383a359efb
         // 球の内部にあるか判定
         bool is_inside = dot(-ray.direction, info.hitNormal) < 0;
 
         // 次のレイの方向の計算
         Vec3f next_direction;
-<<<<<<< HEAD
-        if (!is_inside)
-        {
-          next_direction = refract(-ray.direction, info.hitNormal, 1.0f, 1.5f);
-        }
-        else
-        {
-          next_direction = refract(-ray.direction, -info.hitNormal, 1.5f, 1.0f);
-=======
         if (!is_inside) {
           if (!refract(-ray.direction, info.hitNormal, 1.0f, 1.5f,
                        next_direction)) {
@@ -81,28 +40,11 @@ Vec3f raytrace(const Ray &ray_in, const Scene &scene)
                        next_direction)) {
             next_direction = reflect(-ray.direction, -info.hitNormal);
           }
->>>>>>> 8660984dacb76ee330e572a4c65c33383a359efb
         }
 
         // 次のレイをセット
         ray = Ray(info.hitPos, next_direction);
       }
-<<<<<<< HEAD
-      else
-      {
-        // 光源が見えるかテスト
-        Ray shadow_ray(info.hitPos, LIGHT_DIRECTION);
-        IntersectInfo shadow_info;
-        if (!scene.intersect(shadow_ray, shadow_info))
-        {
-          // 光源が見えたら寄与を計算
-          color = std::max(dot(LIGHT_DIRECTION, info.hitNormal), 0.0f) *
-                  info.hitSphere->kd;
-        }
-        else
-        {
-          // 光源から見えなかったら一定量の寄与を与える
-=======
       // その他の場合
       else {
         // 光源が見えるかテスト
@@ -117,13 +59,10 @@ Vec3f raytrace(const Ray &ray_in, const Scene &scene)
         }
         // 光源が見えない場合
         else {
->>>>>>> 8660984dacb76ee330e572a4c65c33383a359efb
           color = Vec3f(0.1f) * info.hitSphere->kd;
         }
       }
-    }
-    else
-    {
+    } else {
       break;
     }
   }
@@ -131,10 +70,10 @@ Vec3f raytrace(const Ray &ray_in, const Scene &scene)
   return color;
 }
 
-int main()
-{
+int main() {
   constexpr int width = 512;
   constexpr int height = 512;
+  constexpr int SSAA_samples = 16;
   Image img(width, height);
 
   const Vec3f camPos(4, 1, 7);
@@ -154,19 +93,28 @@ int main()
   scene.addSphere(Sphere(Vec3f(-2, 3, 1), 1.0, Vec3f(1), MaterialType::Mirror));
   scene.addSphere(Sphere(Vec3f(3, 1, 2), 1.0, Vec3f(1), MaterialType::Glass));
 
-  for (int j = 0; j < height; ++j)
-  {
-    for (int i = 0; i < width; ++i)
-    {
-      // (u, v)の計算
-      float u = (2.0f * i - width) / height;
-      float v = (2.0f * j - height) / height;
+  RNG rng;
 
-      // レイの生成
-      const Ray ray = camera.sampleRay(u, v);
+  for (int j = 0; j < height; ++j) {
+    for (int i = 0; i < width; ++i) {
+      Vec3f color(0);
+      for (int k = 0; k < SSAA_samples; ++k) {
+        // (u, v)の計算
+        float u = (2.0f * (i + rng.getNext()) - width) / height;
+        float v = (2.0f * (j + rng.getNext()) - height) / height;
 
-      // 古典的レイトレーシングで色を計算
-      img.setPixel(i, j, raytrace(ray, scene));
+        // レイの生成
+        const Ray ray = camera.sampleRay(u, v);
+
+        // 古典的レイトレーシングで色を計算
+        color += raytrace(ray, scene);
+      }
+
+      // 平均
+      color /= Vec3f(SSAA_samples);
+
+      // 画素への書き込み
+      img.setPixel(i, j, color);
     }
   }
 
