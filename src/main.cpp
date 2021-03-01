@@ -1,5 +1,6 @@
 #include <iostream>
 #include <algorithm>
+#include <cmath>
 #include "scene.h"
 #include "vec3.h"
 #include "image.h"
@@ -13,13 +14,65 @@
 
 using namespace std;
 using vec3f = vec3<float>;
-
+constexpr float PI = 3.14159265359f;
 vec3f raytracing(Ray &ray, Scene &scene);
+
+vec3f localToWorld(const vec3f &v, const vec3f &lx, const vec3f &ly,
+                   const vec3f &lz)
+{
+  return vec3f(v[0] * lx[0] + v[1] * ly[0] + v[2] * lz[0],
+               v[0] * lx[1] + v[1] * ly[1] + v[2] * lz[1],
+               v[0] * lx[2] + v[1] * ly[2] + v[2] * lz[2]);
+}
+float AOratio(Scene &scene, const vec3f &normal, vec3f &position)
+{
+  constexpr int sample = 100;
+  constexpr float distance = 1.0f;
+
+  int count = 0;
+  RNGrandom rng(100);
+  vec3f t, b;
+  if (normal[1] < 0.9f)
+  {
+    t = closs(normal, vec3f(0, 1, 0));
+  }
+  else
+  {
+    t = closs(normal, vec3f(0, 0, -1));
+  }
+  t = normalize(t);
+  b = closs(t, normal);
+  b = normalize(b);
+  for (int i = 0; i < sample; ++i)
+  {
+
+    float u = rng.getRandom();
+    float v = rng.getRandom();
+    float theta = acos(1 - u);
+    float phai = 2.0f * PI * v;
+
+    float x = cos(phai) * sin(theta);
+    float y = 1 - u;
+    float z = sin(phai) * cos(theta);
+
+    vec3f local = vec3f(x, y, z);
+    vec3f world = localToWorld(local, t, normal, b);
+
+    Ray shadow_ray(position, world);
+    IntersectInfo shadow_info;
+    if (scene.hit(shadow_ray, shadow_info) && shadow_info.distance < distance)
+    {
+      ++count;
+    }
+  }
+  return static_cast<float>(count) / sample;
+}
+
 int main()
 {
   constexpr int sampling = 4;
-  const unsigned int width = 512 * 2 * 2;
-  const unsigned int height = 512 * 2;
+  const unsigned int width = 512;
+  const unsigned int height = 512;
   Image img(width, height);
   vec3f camPos(4, 1, 7);
   vec3f lookAt(0);
@@ -70,47 +123,48 @@ vec3f raytracing(Ray &r, Scene &scene)
   {
     if (scene.hit(ray, info))
     {
-      MaterialType type = info.sphere->getMaterial();
-      if (type == MaterialType::Diffuse)
-      {
-        Ray lightray(info.position, light);
-        vec3f anb = info.sphere->getColor();
+      return (1.0f - AOratio(scene, info.normal, info.position)) * vec3f(1, 1, 1);
+      // MaterialType type = info.sphere->getMaterial();
+      // if (type == MaterialType::Diffuse)
+      // {
+      //   Ray lightray(info.position, light);
+      //   vec3f anb = info.sphere->getColor();
 
-        if (scene.hit(lightray, info))
-        {
-          return 0.2f * anb;
-        }
-        else
-        {
-          return max(dot(light, info.normal), 0.0f) * info.sphere->getColor() + 0.2f * anb;
-        }
-      }
-      else if (type == MaterialType::Glass)
-      {
-        bool is_inside = dot(-ray.getdirection(), info.normal) < 0;
-        vec3f next_direction;
-        if (!is_inside)
-        {
-          if (!refraction(-ray.getdirection(), 1.0f, info.normal, 1.5f, next_direction))
-          {
-            next_direction = refrect(ray.getdirection(), info.normal);
-          }
-        }
-        else
-        {
-          if (!refraction(-ray.getdirection(), 1.5f, -info.normal, 1.0f, next_direction))
-          {
-            next_direction = refrect(ray.getdirection(), -info.normal);
-          }
-        }
+      //   if (scene.hit(lightray, info))
+      //   {
+      //     return 0.2f * anb;
+      //   }
+      //   else
+      //   {
+      //     return max(dot(light, info.normal), 0.0f) * info.sphere->getColor() + 0.2f * anb;
+      //   }
+      // }
+      // else if (type == MaterialType::Glass)
+      // {
+      //   bool is_inside = dot(-ray.getdirection(), info.normal) < 0;
+      //   vec3f next_direction;
+      //   if (!is_inside)
+      //   {
+      //     if (!refraction(-ray.getdirection(), 1.0f, info.normal, 1.5f, next_direction))
+      //     {
+      //       next_direction = refrect(ray.getdirection(), info.normal);
+      //     }
+      //   }
+      //   else
+      //   {
+      //     if (!refraction(-ray.getdirection(), 1.5f, -info.normal, 1.0f, next_direction))
+      //     {
+      //       next_direction = refrect(ray.getdirection(), -info.normal);
+      //     }
+      //   }
 
-        ray = Ray(info.position, next_direction);
-      }
-      else if (type == MaterialType::Mirror)
-      {
-        vec3f rdirection = refrect(ray.getdirection(), info.normal);
-        ray = Ray(info.position, rdirection);
-      }
+      //   ray = Ray(info.position, next_direction);
+      // }
+      // else if (type == MaterialType::Mirror)
+      // {
+      //   vec3f rdirection = refrect(ray.getdirection(), info.normal);
+      //   ray = Ray(info.position, rdirection);
+      // }
     }
     else
     {
