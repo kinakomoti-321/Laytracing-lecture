@@ -15,7 +15,7 @@
 using namespace std;
 using vec3f = vec3<float>;
 constexpr float PI = 3.14159265359f;
-vec3f raytracing(Ray &ray, Scene &scene);
+vec3f raytracing(Ray &ray, Scene &scene, RNGrandom &rng);
 
 vec3f localToWorld(const vec3f &v, const vec3f &lx, const vec3f &ly,
                    const vec3f &lz)
@@ -24,13 +24,12 @@ vec3f localToWorld(const vec3f &v, const vec3f &lx, const vec3f &ly,
                v[0] * lx[1] + v[1] * ly[1] + v[2] * lz[1],
                v[0] * lx[2] + v[1] * ly[2] + v[2] * lz[2]);
 }
-float AOratio(Scene &scene, const vec3f &normal, vec3f &position)
+float AOratio(Scene &scene, const vec3f &normal, vec3f &position, RNGrandom &rng)
 {
   constexpr int sample = 100;
-  constexpr float distance = 1.0f;
+  constexpr float distance = 10.0f;
 
   int count = 0;
-  RNGrandom rng(100);
   vec3f t, b;
   if (normal[1] < 0.9f)
   {
@@ -48,18 +47,23 @@ float AOratio(Scene &scene, const vec3f &normal, vec3f &position)
 
     float u = rng.getRandom();
     float v = rng.getRandom();
-    float theta = acos(1 - u);
+    float theta = acos(1.0f - u);
     float phai = 2.0f * PI * v;
 
     float x = cos(phai) * sin(theta);
-    float y = 1 - u;
+    float y = 1.0f - u;
     float z = sin(phai) * cos(theta);
 
     vec3f local = vec3f(x, y, z);
     vec3f world = localToWorld(local, t, normal, b);
-
+    world = normalize(world);
     Ray shadow_ray(position, world);
     IntersectInfo shadow_info;
+    vec3f checknormal(0, 0, 1);
+    checknormal = localToWorld(checknormal, t, normal, b);
+
+    if (checknormal == normal)
+      cout << "check" << endl;
     if (scene.hit(shadow_ray, shadow_info) && shadow_info.distance < distance)
     {
       ++count;
@@ -100,7 +104,7 @@ int main()
         const float u = (2.0f * (i + rng.getRandom() - 0.5f) - width) / width;
         const float v = (2.0f * (j + rng.getRandom() - 0.5f) - height) / height;
         Ray r = camera.getray(v, u);
-        samplecolor = samplecolor + raytracing(r, scene);
+        samplecolor = samplecolor + raytracing(r, scene, rng);
       }
       samplecolor = samplecolor / static_cast<float>(sampling);
       img.SetPixel(i, j, samplecolor);
@@ -111,7 +115,7 @@ int main()
   return 0;
 }
 
-vec3f raytracing(Ray &r, Scene &scene)
+vec3f raytracing(Ray &r, Scene &scene, RNGrandom &rng)
 {
   int Max_Depth = 100;
   vec3f light(1, 1, 1);
@@ -123,7 +127,7 @@ vec3f raytracing(Ray &r, Scene &scene)
   {
     if (scene.hit(ray, info))
     {
-      return (1.0f - AOratio(scene, info.normal, info.position)) * vec3f(1, 1, 1);
+      return (1.0f - AOratio(scene, info.normal, info.position, rng)) * vec3f(1, 1, 1);
       // MaterialType type = info.sphere->getMaterial();
       // if (type == MaterialType::Diffuse)
       // {

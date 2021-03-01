@@ -143,7 +143,11 @@ inline vec3f refrect(const vec3f &v, const vec3f &n)
     vec3f ref = v - 2 * dot(v, n) * n;
     return normalize(ref);
 }
-
+template <typename T>
+inline bool operator==(vec3<T> a, vec3<T> b)
+{
+    return a[0] == b[0] && a[1] == b[1] && a[2] == b[2];
+}
 inline bool refraction(const vec3f &v, float n1, const vec3f &n, float n2, vec3f &r)
 {
     const vec3f th = -(n1 / n2) * (v - dot(v, n) * n);
