@@ -90,11 +90,21 @@ inline vec3<T> operator/(const T &k, const vec3<T> &a)
     }
     return result;
 }
+template <typename T>
+inline float length(vec3<T> &v)
+{
+    float sum = 0;
+    for (int i = 0; i < 3; ++i)
+    {
+        sum += v[i] * v[i];
+    }
+    return sqrt(sum);
+}
 
 template <typename T>
 inline vec3<T> normalize(vec3<T> &v)
 {
-    return v / v.norm();
+    return v / length(v);
 }
 
 template <typename T>
