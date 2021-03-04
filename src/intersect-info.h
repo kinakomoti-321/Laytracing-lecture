@@ -1,13 +1,14 @@
 #ifndef _INTERSECT_H
 #define _INTERSECT_H
 #include "vec3.h"
+#include "geometry.h"
 
-class Sphere;
+class Geometry;
 struct IntersectInfo
 {
     float distance;
     vec3f position;
     vec3f normal;
-    Sphere *sphere;
+    Geometry *geometry;
 };
 #endif

@@ -2,12 +2,44 @@
 #define _GEOMETRY_H
 #include "intersect-info.h"
 #include "ray.h"
+#include "vec3.h"
 
-class geometry
+struct IntersectInfo;
+enum class MaterialType
 {
+    Diffuse,
+    Mirror,
+    Glass
+};
+
+enum class GeometryType
+{
+    Sphere,
+    Rectangle,
+    Triangle
+};
+class Geometry
+{
+protected:
+    GeometryType geo;
+    vec3f position;
+    vec3f basecolor;
+    MaterialType material;
+
 public:
-    virtual bool hit()
+    virtual bool hit(Ray &r, IntersectInfo &info)
     {
+        return false;
+    }
+
+    MaterialType getMaterial() const
+    {
+        return material;
+    }
+
+    vec3f getColor() const
+    {
+        return basecolor;
     }
 };
 #endif

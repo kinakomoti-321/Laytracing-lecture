@@ -4,33 +4,32 @@
 #include "ray.h"
 #include "intersect-info.h"
 #include "color.h"
+#include "geometry.h"
 #include <cmath>
 #include <algorithm>
 using namespace std;
 
-enum class MaterialType
-{
-    Diffuse,
-    Mirror,
-    Glass
-};
-
-class Sphere
+class Sphere : public Geometry
 {
 private:
     float radiance;
-    vec3f position;
-    vec3f basecolor;
-    MaterialType material;
 
 public:
-    Sphere(float r, vec3f p) : radiance(r), position(p)
+    Sphere(float r, vec3f p) : radiance(r)
     {
+        position = p;
         basecolor = vec3f(1, 1, 1);
         material = MaterialType::Diffuse;
+        geo = GeometryType::Sphere;
     };
 
-    Sphere(float r, vec3f p, vec3f c, MaterialType type) : radiance(r), position(p), basecolor(c), material(type){};
+    Sphere(float r, vec3f p, vec3f c, MaterialType type) : radiance(r)
+    {
+        position = p;
+        basecolor = c;
+        material = type;
+        geo = GeometryType::Sphere;
+    };
 
     bool hit(Ray &r, IntersectInfo &info)
     {
@@ -59,17 +58,8 @@ public:
         info.position = r.post(t);
         vec3f normal = info.position - position;
         info.normal = normalize(normal);
-        info.sphere = this;
+        info.geometry = this;
         return true;
-    }
-
-    MaterialType getMaterial() const
-    {
-        return material;
-    }
-    vec3f getColor() const
-    {
-        return basecolor;
     }
 };
 #endif
