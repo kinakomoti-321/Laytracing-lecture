@@ -14,16 +14,17 @@
 #include "geometry.h"
 #include "raytracer.h"
 #include <omp.h>
-
+#include <math.h>
 using namespace std;
 using vec3f = vec3<float>;
 
-vec3f vertex[4];
-vec3f raytracing(Ray &ray, Scene &scene, RNGrandom &rng);
+const float PI = 3.14159234;
+
+string objname = "teapot.obj";
 
 int main()
 {
-  constexpr int sampling = 4;
+  constexpr int sampling = 1000;
   const unsigned int width = 512;
   const unsigned int height = 512;
   Image img(width, height);
@@ -33,27 +34,33 @@ int main()
   lookAt = normalize(lookAt);
   pincamera camera(camPos, lookAt);
   Scene scene;
-  for (int i = 0; i < 3; ++i)
+  // vec3f vertex[4];
+  // for (int i = 0; i < 3; ++i)
+  // {
+  //   vertex[i] = vec3f(2 * cos(2 * PI * i / 3 + 2 * PI / 6), 0, 2 * sin(2 * PI * i / 3 + 2 * PI / 6));
+  // }
+
+  // vertex[3] = vec3f(0, 2, 0);
+  // scene.PyramidAdd(vertex, vec3f(1, 0, 0), MaterialType::Diffuse);
+  vector<vec3f> vertex1 = {
+      vec3f(1, 1, 1),
+      vec3f(1, -1, 1),
+      vec3f(-1, -1, 1), vec3f(-1, 1, 1), vec3f(1, 1, -1), vec3f(1, -1, -1), vec3f(-1, -1, -1), vec3f(-1, 1, 0)};
+  for (int i = 0; i < 8; i++)
   {
-    vertex[i] = vec3f(2 * cos(2 * PI * i / 3 + 2 * PI / 6), 0, 2 * sin(2 * PI * i / 3 + 2 * PI / 6));
+    vertex1[i][1] += 3;
+    vertex1[i][2] *= 2;
+    vertex1[i][0] *= 2;
   }
+  vector<int> index = {0, 1, 2, 0, 2, 3, 0, 7, 4, 0, 3, 7, 3, 2, 6, 3, 6, 7, 1, 5, 6, 1, 6, 2, 0, 5, 1, 0, 4, 5, 4, 6, 7, 4, 5, 6};
 
-  vertex[3] = vec3f(0, 2, 0);
-  scene.PyramidAdd(vertex, vec3f(1, 0, 0), MaterialType::Diffuse);
-
-  for (int i = 0; i < 4; ++i)
-  {
-    vertex[i] = vertex[i] + vec3f(3, 0, -3);
-  }
-  scene.PyramidAdd(vertex, vec3f(0, 0, 1), MaterialType::Diffuse);
-
-  // scene.SphereAdd(vec3f(-2, 0, 1), 1.0f, vec3f(0.8, 0.2, 0.2), MaterialType::Diffuse);
-  // scene.SphereAdd(vec3f(0), 1.0, vec3f(0.6, 0.8, 0.2), MaterialType::Diffuse);
-  // scene.SphereAdd(vec3f(2, 0, -1), 1.0, vec3f(0.2, 0.2, 0.8), MaterialType::Diffuse);
-  // scene.SphereAdd(vec3f(-2, 3, 1), 1.0, vec3f(1), MaterialType::Mirror);
-  // scene.SphereAdd(vec3f(3, 1, 2), 1.0, vec3f(1), MaterialType::Glass);
+  scene.SphereAdd(vec3f(-2, 0, 1), 1.0f, vec3f(0.8, 0.2, 0.2), MaterialType::Diffuse);
+  scene.Polygon(vertex1, index, vec3f(1), MaterialType::Emission);
+  // scene.SphereAdd(vec3f(0, 10.0, 0), 5.0, vec3f(0.6, 0.8, 0.2), MaterialType::Emission);
+  scene.SphereAdd(vec3f(2, 0, -1), 1.0, vec3f(0.2, 0.2, 0.8), MaterialType::Diffuse);
+  scene.SphereAdd(vec3f(-2, 3, 1), 1.0, vec3f(1), MaterialType::Mirror);
+  // scene.SphereAdd(vec3f(3, 1, 2), 1.0, vec3f(1), MaterialType::Diffuse);
   scene.RectangleAdd(vec3f(0, -2, 0), vec3f(0, 1, 0), vec3f(1, 1, 1), MaterialType::Diffuse);
-  // scene.TriangleAdd(vec3f(0, 0, 5), vec3f(0, 5, 0), vec3f(5, 0, 0), vec3f(1, 0, 0), MaterialType::Diffuse);
 
 #pragma omp parallel for schedule(dynamic, 1)
   for (int j = 0; j < height; ++j)
@@ -67,7 +74,9 @@ int main()
         const float u = (2.0f * (i + rng.getRandom() - 0.5f) - width) / width;
         const float v = (2.0f * (j + rng.getRandom() - 0.5f) - height) / height;
         Ray r = camera.getray(v, u);
-        samplecolor = samplecolor + raytracing(r, scene, rng);
+
+        // samplecolor = samplecolor + vec3f(Pathtracer(r, scene, rng));
+        samplecolor = samplecolor + Pathtracer(r, scene, rng);
       }
       samplecolor = samplecolor / static_cast<float>(sampling);
       img.SetPixel(i, j, samplecolor);
@@ -77,66 +86,3 @@ int main()
   img.writePPM("output.ppm");
   return 0;
 }
-
-// vec3f raytracing(Ray &r, Scene &scene, RNGrandom &rng)
-// {
-//   int Max_Depth = 100;
-//   vec3f light(1, 1, 1);
-//   light = normalize(light);
-//   IntersectInfo info;
-//   Ray ray = r;
-//   float refractance[2] = {1.0f, 1.5f};
-//   for (int i = 1; i <= Max_Depth; ++i)
-//   {
-//     if (scene.hit(ray, info))
-//     {
-//       MaterialType type = info.geometry->getMaterial();
-//       if (type == MaterialType::Diffuse)
-//       {
-//         Ray lightray(info.position, light);
-//         vec3f anb = info.geometry->getColor();
-
-//         if (scene.hit(lightray, info))
-//         {
-//           return 0.2f * anb;
-//         }
-//         else
-//         {
-//           return max(dot(light, info.normal), 0.0f) * info.geometry->getColor() + 0.2f * anb;
-//         }
-//       }
-//       else if (type == MaterialType::Glass)
-//       {
-//         bool is_inside = dot(-ray.getdirection(), info.normal) < 0;
-//         vec3f next_direction;
-//         if (!is_inside)
-//         {
-//           if (!refraction(-ray.getdirection(), 1.0f, info.normal, 1.5f, next_direction))
-//           {
-//             next_direction = refrect(ray.getdirection(), info.normal);
-//           }
-//         }
-//         else
-//         {
-//           if (!refraction(-ray.getdirection(), 1.5f, -info.normal, 1.0f, next_direction))
-//           {
-//             next_direction = refrect(ray.getdirection(), -info.normal);
-//           }
-//         }
-
-//         ray = Ray(info.position, next_direction);
-//       }
-//       else if (type == MaterialType::Mirror)
-//       {
-//         vec3f rdirection = refrect(ray.getdirection(), info.normal);
-//         ray = Ray(info.position, rdirection);
-//       }
-//     }
-//     else
-//     {
-//       return vec3f(0, 0, 0);
-//     }
-//   }
-
-//   return vec3f(0, 0, 0);
-// }

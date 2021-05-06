@@ -3,13 +3,15 @@
 #include "intersect-info.h"
 #include "ray.h"
 #include "vec3.h"
+#include <math.h>
 
 struct IntersectInfo;
 enum class MaterialType
 {
     Diffuse,
     Mirror,
-    Glass
+    Glass,
+    Emission
 };
 
 enum class GeometryType
@@ -40,6 +42,11 @@ public:
     vec3f getColor() const
     {
         return basecolor;
+    }
+
+    vec3f BSDF()
+    {
+        return basecolor / (float)M_PI;
     }
 };
 #endif

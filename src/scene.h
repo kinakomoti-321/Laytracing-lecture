@@ -7,6 +7,7 @@
 #include "rectangle.h"
 #include "triangle.h"
 #include <vector>
+using namespace std;
 class Scene
 {
 private:
@@ -56,6 +57,13 @@ public:
         TriangleAdd(vertex[0], vertex[1], vertex[3], color, mater);
         TriangleAdd(vertex[1], vertex[2], vertex[3], color, mater);
         TriangleAdd(vertex[0], vertex[2], vertex[3], color, mater);
+    }
+    void Polygon(const vector<vec3f> &vertex, const vector<int> &index, const vec3f &color, const MaterialType mater)
+    {
+        for (int i = 0; i * 3 < index.size(); i++)
+        {
+            TriangleAdd(vertex[index[i * 3]], vertex[index[i * 3 + 1]], vertex[index[i * 3 + 2]], color, mater);
+        }
     }
 
     bool hit(Ray &r, IntersectInfo &info)

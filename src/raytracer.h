@@ -2,6 +2,7 @@
 #define _RAYTRACER_H
 #include "intersect-info.h"
 #include "scene.h"
+#include "anbient.h"
 #include "rng.h"
 #include <iostream>
 using namespace std;
@@ -9,8 +10,7 @@ using namespace std;
 vec3f raytracing(Ray &r, Scene &scene, RNGrandom &rng)
 {
     int Max_Depth = 100;
-    vec3f light(1, 1, 1);
-    light = normalize(light);
+    vec3f lightpos(1, 3, 0);
     IntersectInfo info;
     Ray ray = r;
     float refractance[2] = {1.0f, 1.5f};
@@ -21,16 +21,19 @@ vec3f raytracing(Ray &r, Scene &scene, RNGrandom &rng)
             MaterialType type = info.geometry->getMaterial();
             if (type == MaterialType::Diffuse)
             {
+                vec3f light = lightpos - info.position;
+                float lightdis = light.norm2();
+                light = normalize(light);
                 Ray lightray(info.position, light);
-                vec3f anb = info.geometry->getColor();
+                vec3f anb = info.geometry->getColor() * 0.2f;
 
                 if (scene.hit(lightray, info))
                 {
-                    return 0.2f * anb;
+                    return anb;
                 }
                 else
                 {
-                    return max(dot(light, info.normal), 0.0f) * info.geometry->getColor() + 0.2f * anb;
+                    return max(dot(light, info.normal), 0.0f) * info.geometry->getColor() * 5.0f / lightdis + 0.2f * anb;
                 }
             }
             else if (type == MaterialType::Glass)

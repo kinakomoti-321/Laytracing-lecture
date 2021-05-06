@@ -7,10 +7,12 @@ option(BUILD_REFERENCE "build reference raytracer" OFF)
 # openMP
 find_package(OpenMP)
 
+
 # main
 add_executable(main src/main.cpp)
 target_compile_features(main PRIVATE cxx_std_17)
 target_include_directories(main PRIVATE src)
+
 
 if(OpenMP_CXX_FOUND)
   target_link_libraries(main PRIVATE OpenMP::OpenMP_CXX)

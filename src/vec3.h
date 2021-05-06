@@ -90,6 +90,23 @@ inline vec3<T> operator/(const T &k, const vec3<T> &a)
     }
     return result;
 }
+
+template <typename T>
+inline vec3<T> operator/=(const vec3<T> &a, const T &k)
+{
+    return a / k;
+}
+
+template <typename T>
+inline vec3<T> operator+=(const vec3<T> &a, const vec3<T> &k)
+{
+    return a + k;
+}
+template <typename T>
+inline vec3<T> operator*=(const vec3<T> &a, const vec3<T> &k)
+{
+    return adamarl(a, k);
+}
 template <typename T>
 inline float length(vec3<T> &v)
 {
