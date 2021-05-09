@@ -46,13 +46,15 @@ int main()
       vec3f(1, 1, 1),
       vec3f(1, -1, 1),
       vec3f(-1, -1, 1), vec3f(-1, 1, 1), vec3f(1, 1, -1), vec3f(1, -1, -1), vec3f(-1, -1, -1), vec3f(-1, 1, 0)};
+  vector<int> index = {0, 1, 2, 0, 2, 3, 0, 7, 4, 0, 3, 7, 3, 2, 6, 3, 6, 7, 1, 5, 6, 1, 6, 2, 0, 5, 1, 0, 4, 5, 4, 6, 7, 4, 5, 6};
+
+  scene.Polygon(vertex1, index, vec3f(1), MaterialType::Diffuse);
   for (int i = 0; i < 8; i++)
   {
     vertex1[i][1] += 3;
     vertex1[i][2] *= 2;
     vertex1[i][0] *= 2;
   }
-  vector<int> index = {0, 1, 2, 0, 2, 3, 0, 7, 4, 0, 3, 7, 3, 2, 6, 3, 6, 7, 1, 5, 6, 1, 6, 2, 0, 5, 1, 0, 4, 5, 4, 6, 7, 4, 5, 6};
 
   scene.SphereAdd(vec3f(-2, 0, 1), 1.0f, vec3f(0.8, 0.2, 0.2), MaterialType::Diffuse);
   scene.Polygon(vertex1, index, vec3f(1), MaterialType::Emission);
