@@ -20,6 +20,7 @@ enum class GeometryType
     Rectangle,
     Triangle
 };
+
 class Geometry
 {
 protected:
@@ -48,5 +49,9 @@ public:
     {
         return basecolor / (float)M_PI;
     }
+};
+
+class Object
+{
 };
 #endif

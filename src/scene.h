@@ -5,7 +5,8 @@
 #include "intersect-info.h"
 #include "geometry.h"
 #include "rectangle.h"
-#include "triangle.h"
+#include "BVH/VBH.h"
+#include "BVH/polygon.h"
 #include <vector>
 using namespace std;
 class Scene
@@ -45,26 +46,26 @@ public:
         geometry.push_back(geo);
     }
 
-    void TriangleAdd(const vec3f &v0, const vec3f &v1, const vec3f &v2, const vec3f &color, const MaterialType mater)
-    {
-        Geometry *geo = new Triangle(v0, v1, v2, color, mater);
-        geometry.push_back(geo);
-    }
+    // void TriangleAdd(const vec3f &v0, const vec3f &v1, const vec3f &v2, const vec3f &color, const MaterialType mater)
+    // {
+    //     Geometry *geo = new Triangle(v0, v1, v2, color, mater);
+    //     geometry.push_back(geo);
+    // }
 
-    void PyramidAdd(const vec3f vertex[4], const vec3f color, const MaterialType mater)
-    {
-        TriangleAdd(vertex[0], vertex[1], vertex[2], color, mater);
-        TriangleAdd(vertex[0], vertex[1], vertex[3], color, mater);
-        TriangleAdd(vertex[1], vertex[2], vertex[3], color, mater);
-        TriangleAdd(vertex[0], vertex[2], vertex[3], color, mater);
-    }
-    void Polygon(const vector<vec3f> &vertex, const vector<int> &index, const vec3f &color, const MaterialType mater)
-    {
-        for (int i = 0; i * 3 < index.size(); i++)
-        {
-            TriangleAdd(vertex[index[i * 3]], vertex[index[i * 3 + 1]], vertex[index[i * 3 + 2]], color, mater);
-        }
-    }
+    // void PyramidAdd(const vec3f vertex[4], const vec3f color, const MaterialType mater)
+    // {
+    //     TriangleAdd(vertex[0], vertex[1], vertex[2], color, mater);
+    //     TriangleAdd(vertex[0], vertex[1], vertex[3], color, mater);
+    //     TriangleAdd(vertex[1], vertex[2], vertex[3], color, mater);
+    //     TriangleAdd(vertex[0], vertex[2], vertex[3], color, mater);
+    // }
+    // void Polygon(const vector<vec3f> &vertex, const vector<int> &index, const vec3f &color, const MaterialType mater)
+    // {
+    //     for (int i = 0; i * 3 < index.size(); i++)
+    //     {
+    //         TriangleAdd(vertex[index[i * 3]], vertex[index[i * 3 + 1]], vertex[index[i * 3 + 2]], color, mater);
+    //     }
+    // }
 
     bool hit(Ray &r, IntersectInfo &info)
     {

@@ -3,7 +3,6 @@
 #include "vec3.h"
 #include "ray.h"
 #include "intersect-info.h"
-#include "color.h"
 #include "geometry.h"
 #include <cmath>
 #include <algorithm>

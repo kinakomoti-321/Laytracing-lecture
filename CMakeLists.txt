@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.12)
 
 project(classical-raytracer LANGUAGES CXX)
 
-option(BUILD_REFERENCE "build reference raytracer" OFF)
+option(BUILD_REFERENCE "build reference raytracer" ON)
 
 # openMP
 find_package(OpenMP)
@@ -21,6 +21,6 @@ else()
 endif()
 
 # reference
-if(BUILD_REFERENCE)
-  add_subdirectory(ref)
-endif()
+#if(BUILD_REFERENCE)
+ # add_subdirectory(ref)
+#endif()
