@@ -63,6 +63,11 @@ struct AABB
 
         return tmin < ray.tmax && tmax > ray.tmin;
     }
+    inline void getpos() const
+    {
+        cout << bounds[0] << endl;
+        cout << bounds[1] << endl;
+    }
 };
 
 inline AABB mergeAABB(const AABB &bbox, const vec3f &p)

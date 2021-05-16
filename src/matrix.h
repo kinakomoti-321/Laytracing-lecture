@@ -74,9 +74,23 @@ inline vec3f operator*(const Matrix &mat, const vec3f &pos)
 
     return vec3f(result[0], result[1], result[2]);
 }
-inline Matrix operator*(Matrix &mat1, Matrix &mat2)
+
+inline Matrix operator*(const Matrix &mat1, const Matrix &mat2)
 {
     Matrix result;
+    for (int i = 0; i < 4; i++)
+    {
+        for (int j = 0; j < 4; j++)
+        {
+            float sum = 0;
+            for (int k = 0; k < 4; k++)
+            {
+                sum += mat1.mq(i, k) * mat2.mq(k, j);
+            }
+
+            result[i * 4 + j] = sum;
+        }
+    }
 
     return result;
 }
@@ -94,5 +108,10 @@ inline std::ostream &operator<<(std::ostream &stream, const Matrix &mat)
 
     return stream;
 }
+
+// inline vector<float> vertexMatrix(Matrix &mat, const float *vertex, int nVertex)
+// {
+
+// }
 
 #endif

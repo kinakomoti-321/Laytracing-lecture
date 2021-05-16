@@ -2,14 +2,14 @@
 #define _TRIANGLE_H
 #include "geometry.h"
 #include "intersect-info.h"
-class Triangle : public Geometry
+class triangle : public Geometry
 {
 private:
     vec3f v[3];
     vec3f normal;
 
 public:
-    Triangle(vec3f v0, vec3f v1, vec3f v2, vec3f color, MaterialType mater)
+    triangle(vec3f v0, vec3f v1, vec3f v2, vec3f color, MaterialType mater)
     {
         v[0] = v0;
         v[1] = v1;
