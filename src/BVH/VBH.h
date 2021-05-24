@@ -240,6 +240,7 @@ private:
         node->child[0] = nullptr;
         node->child[1] = nullptr;
         stats.nLeafNodes++;
+        cout << bbox << endl;
         return node;
     }
 
@@ -306,7 +307,7 @@ private:
         node->bbox = bbox;
         node->primIndicesOffset = primStart;
         node->axis = splitAxis;
-        bbox.getpos();
+        cout << bbox << endl;
 
         // 左の子ノードで同様の計算
         node->child[0] = buildBVHNode(primStart, splitIdx);
@@ -425,7 +426,6 @@ public:
     // traverseをする
     bool intersect(const Ray &ray, IntersectInfo &info)
     {
-
         // レイの方向の逆数と符号を事前計算しておく
         const vec3f dirInv = 1.0f / ray.getdirection();
         int dirInvSign[3];

@@ -165,9 +165,9 @@ std::ostream &operator<<(std::ostream &stream, const vec3<T> &v)
 }
 using vec3f = vec3<float>;
 
-inline vec3f refrect(const vec3f &v, const vec3f &n)
+inline vec3f reflect(const vec3f &v, const vec3f &n)
 {
-    vec3f ref = v - 2 * dot(v, n) * n;
+    vec3f ref = -v + 2 * dot(v, n) * n;
     return normalize(ref);
 }
 template <typename T>

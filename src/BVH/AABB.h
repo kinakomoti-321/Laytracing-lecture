@@ -8,37 +8,43 @@
 #include <iostream>
 #include <limits>
 
+using Vec3 = vec3f;
+
 struct AABB
 {
-    vec3f bounds[2];
-    // explicit暗黙的な型変換を防ぐ
-    explicit AABB() : bounds{vec3f(std::numeric_limits<float>::max()), vec3f(std::numeric_limits<float>::min())} {}
+    Vec3 bounds[2];
 
-    explicit AABB(const vec3f &pMin, const vec3f &pMax) : bounds{pMin, pMax} {}
+    explicit AABB()
+        : bounds{Vec3(std::numeric_limits<float>::max()),
+                 Vec3(std::numeric_limits<float>::min())} {}
+    explicit AABB(const Vec3 &pMin, const Vec3 &pMax) : bounds{pMin, pMax} {}
 
-    vec3f center() const { return 0.5f * (bounds[0] + bounds[1]); }
+    Vec3 center() const { return 0.5f * (bounds[0] + bounds[1]); }
 
-    //一番長い軸を返す0はｘ1はy2はz
     int longestAxis() const
     {
-        const vec3f length = bounds[1] - bounds[0];
+        const Vec3 length = bounds[1] - bounds[0];
+        // x
         if (length[0] >= length[1] && length[0] >= length[2])
         {
             return 0;
         }
-        else if (length[1] >= length[2] && length[1] >= length[0])
+        // y
+        else if (length[1] >= length[0] && length[1] >= length[2])
         {
             return 1;
         }
+        // z
         else
         {
             return 2;
         }
     }
 
-    //高速なAABBの衝突判定　これにはレイの長さの逆数とそれぞれの符号が必要
-    bool intersect(const Ray &ray, const vec3f &dirInv, const int dirInvSign[3]) const
+    bool intersect(const Ray &ray, const Vec3 &dirInv,
+                   const int dirInvSign[3]) const
     {
+        // https://dl.acm.org/doi/abs/10.1145/1198555.1198748
         float tmin, tmax, tymin, tymax, tzmin, tzmax;
 
         tmin = (bounds[dirInvSign[0]][0] - ray.getorigin()[0]) * dirInv[0];
@@ -63,14 +69,9 @@ struct AABB
 
         return tmin < ray.tmax && tmax > ray.tmin;
     }
-    inline void getpos() const
-    {
-        cout << bounds[0] << endl;
-        cout << bounds[1] << endl;
-    }
 };
 
-inline AABB mergeAABB(const AABB &bbox, const vec3f &p)
+inline AABB mergeAABB(const AABB &bbox, const Vec3 &p)
 {
     AABB ret;
     for (int i = 0; i < 3; ++i)
@@ -92,4 +93,9 @@ inline AABB mergeAABB(const AABB &bbox1, const AABB &bbox2)
     return ret;
 }
 
+inline std::ostream &operator<<(std::ostream &stream, const AABB &bbox)
+{
+    stream << bbox.bounds[0] << ", " << bbox.bounds[1];
+    return stream;
+}
 #endif

@@ -17,6 +17,13 @@ vec3f localToWorld(const vec3f &v, const vec3f &lx, const vec3f &ly,
                  v[0] * lx[2] + v[1] * ly[2] + v[2] * lz[2]);
 }
 
+vec3f worldtoLocal(const vec3f &v, const vec3f &lx, const vec3f &ly, const vec3f &lz)
+{
+    return vec3f(v[0] * lx[0] + v[1] * lx[1] + v[2] * lx[2],
+                 v[0] * ly[0] + v[1] * ly[1] + v[2] * ly[2],
+                 v[0] * lz[0] + v[1] * lz[1] + v[2] * lz[2]);
+}
+
 // 法線から接空間の基底を計算する
 void tangentSpaceBasis(const vec3f &n, vec3f &t, vec3f &b)
 {
@@ -71,13 +78,14 @@ vec3f Pathtracer(Ray &r, Scene &scene, RNGrandom &rng)
         IntersectInfo info;
         if (!scene.hit(ray, info))
         {
-            LTE = 0;
+            LTE = s;
             break;
         }
 
         if (info.geometry->getMaterial() == MaterialType::Emission)
         {
-            LTE = (float)3.0 * s;
+
+            LTE = (float)2.0 * s;
             break;
         }
 
@@ -86,24 +94,27 @@ vec3f Pathtracer(Ray &r, Scene &scene, RNGrandom &rng)
         tangentSpaceBasis(info.normal, t, b);
 
         vec3f bsdf;
-        // 半球面一様サンプリング
-        const vec3f direction_tangent = info.geometry->BSDF(rng.getRandom(), rng.getRandom(), bsdf);
+        vec3f wo = worldtoLocal(-ray.getdirection(), t, info.normal, b);
+        float pdf;
+        vec3f direction_tangent;
+        bsdf = info.geometry->bsdf->sampling(rng, wo, direction_tangent, pdf);
         //sampleHemisphere(rng.getRandom(), rng.getRandom());
-
         // 接空間からワールド座標系への変換
         const vec3f nextdirection =
             localToWorld(direction_tangent, t, info.normal, b);
 
         ray = Ray(info.position + nextdirection * 0.01f, nextdirection);
         //衝突した場所の輝度計算
-        //float cos = abs(dot(info.normal, nextdirection));
+        float cos = abs(dot(info.normal, nextdirection));
         //float pdf = cos / P;
         // s = adamarl(s, info.geometry->BSDF() * cos / pdf);
-        s = adamarl(s, bsdf);
+        s = adamarl(s, bsdf * cos / pdf);
+        // cout << bsdf << " " << pdf << " " << cos << endl;
 
+        // cout << s << endl;
         counter++;
     }
-
+    // cout << "pathtracer end" << endl;
     return LTE;
 }
 

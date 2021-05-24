@@ -5,39 +5,70 @@
 #include <iostream>
 #include <array>
 #include <vector>
+#include <cassert>
 
-struct Polygon
+using Vec3 = vec3f;
+struct Polygon : public Geometry
 {
-    unsigned int nVertex;
-    float *vertex;
-    unsigned int *index;
-    vec3f color;
+    unsigned int nVertices; // 頂点数
+    float *vertices;        // 頂点座標の配列
+    unsigned int *indices;  // verticesへのインデックス配列
+    float *normals;         // 頂点ごとの法線の配列
+    float *uvs;             // 頂点ごとのUV座標の配列
+    int *geomIDs;
 
-    Polygon(unsigned int nVertexs, float *vertexs, unsigned int *indexs, vec3f &color) : nVertex(nVertexs), vertex(vertexs), index(indexs), color(color){};
-    // Polygon(unsigned int nVertexs, vector<vec3f> &vertexs, unsigned int *indexs, vec3f &color, int delta) : nVertex(nVertexs), index(indexs), color(color)
-    // {
-    //     vector<float> v;
-    //     for (int i = 0; i < vertexs.size(); ++i)
-    //     {
-    //         v.push_back(vertexs[i][0]);
-    //         v.push_back(vertexs[i][1]);
-    //         v.push_back(vertexs[i][2]);
-    //     }
-
-    //     vertex = v.data();
-    // };
-
-    vec3f getVertex(unsigned int vertInt) const
+    Polygon(unsigned int nVertices, float *vertices, unsigned int *indices,
+            float *normals = nullptr, float *uvs = nullptr,
+            int *geomIDs = nullptr)
+        : nVertices(nVertices),
+          vertices(vertices),
+          indices(indices),
+          normals(normals),
+          uvs(uvs),
+          geomIDs(geomIDs) {}
+    Polygon(unsigned int nVertices, float *vertices, unsigned int *indices, vec3f col) : nVertices(nVertices), vertices(vertices), indices(indices)
     {
-        return vec3f(vertex[3 * vertInt], vertex[3 * vertInt + 1], vertex[3 * vertInt + 2]);
+        basecolor = col;
+        material = MaterialType::Emission;
+    }
+    // 指定した頂点座標の位置の頂点座標をVec3で取得する
+    Vec3 getVertex(unsigned int vertexIdx) const
+    {
+        assert(vertexIdx <= nVertices);
+        return Vec3(vertices[3 * vertexIdx], vertices[3 * vertexIdx + 1],
+                    vertices[3 * vertexIdx + 2]);
     }
 
-    std::array<unsigned int, 3> getIndex(unsigned int ID) const
+    // 指定した面の頂点座標配列へのインデックスを取得する
+    std::array<unsigned int, 3> getIndices(unsigned int faceIdx) const
     {
-        return {index[3 * ID], index[3 * ID + 1], index[3 * ID + 2]};
+        assert(faceIdx <= nFaces());
+        return {indices[3 * faceIdx + 0], indices[3 * faceIdx + 1],
+                indices[3 * faceIdx + 2]};
     }
 
-    unsigned int nFaces() const { return nVertex / 3; }
+    // 指定した頂点座標の位置の法線をVec3で取得する
+    Vec3 getNormal(unsigned int vertexIdx) const
+    {
+        assert(vertexIdx <= nVertices);
+        return Vec3(normals[3 * vertexIdx], normals[3 * vertexIdx + 1],
+                    normals[3 * vertexIdx + 2]);
+    }
+
+    // 指定した頂点座標の位置のUV座標を取得する
+    std::pair<float, float> getUV(unsigned int vertexIdx) const
+    {
+        assert(vertexIdx <= nVertices);
+        return {uvs[2 * vertexIdx], uvs[2 * vertexIdx + 1]};
+    }
+
+    // 頂点ごとの法線が存在するか
+    bool hasNormals() const { return normals != nullptr; }
+    // 頂点ごとのUVが存在するか
+    bool hasUVs() const { return uvs != nullptr; }
+
+    // 面の数を返す
+    unsigned int nFaces() const { return nVertices / 3; };
 };
 
 #endif
