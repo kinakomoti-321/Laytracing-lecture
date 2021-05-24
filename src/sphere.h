@@ -3,7 +3,6 @@
 #include "vec3.h"
 #include "ray.h"
 #include "intersect-info.h"
-#include "color.h"
 #include "geometry.h"
 #include <cmath>
 #include <algorithm>
@@ -23,12 +22,13 @@ public:
         geo = GeometryType::Sphere;
     };
 
-    Sphere(float r, vec3f p, vec3f c, MaterialType type) : radiance(r)
+    Sphere(float r, vec3f p, vec3f c, MaterialType type, BSDF *inbsdf) : radiance(r)
     {
         position = p;
         basecolor = c;
         material = type;
         geo = GeometryType::Sphere;
+        bsdf = inbsdf;
     };
 
     bool hit(Ray &r, IntersectInfo &info)
