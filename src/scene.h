@@ -5,9 +5,8 @@
 #include "intersect-info.h"
 #include "geometry.h"
 #include "rectangle.h"
-#include "BVH/VBH.h"
-#include "BVH/polygon.h"
 #include "triangle.h"
+#include "BVH/polygon.h"
 #include <vector>
 #include "BSDF.h"
 
@@ -49,20 +48,14 @@ public:
         Geometry *geo = new Sphere(f, origin);
         geometry.push_back(geo);
     }
-    void SphereAdd(const vec3f &origin, const float &f, const vec3f &color, const MaterialType &type, BSDF *inbsdf)
+    void SphereAdd(const vec3f &origin, const float &f, const MaterialType &type, BSDF *inbsdf)
     {
-        Geometry *geo = new Sphere(f, origin, color, type, inbsdf);
+        Geometry *geo = new Sphere(f, origin, type, inbsdf);
         geometry.push_back(geo);
     }
-    void RectangleAdd(const vec3f &origin, const vec3f &normal, const vec3f &color, MaterialType mater)
+    void RectangleAdd(const vec3f &origin, const vec3f &normal, MaterialType mater, BSDF *inbsdf)
     {
-        Geometry *geo = new Rectangle(origin, normal, color, mater);
-        geometry.push_back(geo);
-    }
-
-    void TriangleAdd(const vec3f &v0, const vec3f &v1, const vec3f &v2, const vec3f &color, const MaterialType mater, BSDF *inbsdf)
-    {
-        Geometry *geo = new triangle(v0, v1, v2, color, mater, inbsdf);
+        Geometry *geo = new Rectangle(origin, normal, mater, inbsdf);
         geometry.push_back(geo);
     }
 
@@ -73,11 +66,12 @@ public:
     //     TriangleAdd(vertex[1], vertex[2], vertex[3], color, mater);
     //     TriangleAdd(vertex[0], vertex[2], vertex[3], color, mater);
     // }
-    void polygon(const vector<vec3f> &vertex, const vector<int> &index, const vec3f &color, const MaterialType mater, BSDF *inbsdf)
+    void addPolygon(Polygon *polygon)
     {
-        for (int i = 0; i * 3 < index.size(); i++)
+        for (int i = 0; i < polygon->nFaces(); i++)
         {
-            TriangleAdd(vertex[index[i * 3]], vertex[index[i * 3 + 1]], vertex[index[i * 3 + 2]], color, mater, inbsdf);
+            Geometry *geo = new Triangle(polygon, i);
+            geometry.push_back(geo);
         }
     }
 

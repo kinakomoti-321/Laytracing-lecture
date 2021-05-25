@@ -10,12 +10,12 @@ private:
     float x, y;
 
 public:
-    Rectangle(vec3f pos, vec3f n, vec3f color, MaterialType mater)
+    Rectangle(vec3f pos, vec3f n, MaterialType mater, BSDF *inbsdf)
     {
         position = pos;
         normal = n;
-        basecolor = color;
         material = mater;
+        bsdf = inbsdf;
     }
 
     bool hit(Ray &ray, IntersectInfo &info)

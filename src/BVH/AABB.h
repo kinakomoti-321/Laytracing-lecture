@@ -1,56 +1,54 @@
-#ifndef _AABB_H
-#define _AABB_H
-
-#include "ray.h"
+#ifndef AABB_H
+#define AABB_H
+#include "intersect-info.h"
 #include "vec3.h"
-
-#include <algorithm>
+#include "ray.h"
 #include <iostream>
 #include <limits>
-
-using Vec3 = vec3f;
-
+using namespace std;
 struct AABB
 {
-    Vec3 bounds[2];
+public:
+    vec3f bound[2];
 
-    explicit AABB()
-        : bounds{Vec3(std::numeric_limits<float>::max()),
-                 Vec3(std::numeric_limits<float>::min())} {}
-    explicit AABB(const Vec3 &pMin, const Vec3 &pMax) : bounds{pMin, pMax} {}
-
-    Vec3 center() const { return 0.5f * (bounds[0] + bounds[1]); }
-
-    int longestAxis() const
+    AABB()
     {
-        const Vec3 length = bounds[1] - bounds[0];
-        // x
+        bound[0] = vec3f(std::numeric_limits<float>::max());
+        bound[1] = vec3f(std::numeric_limits<float>::min());
+    }
+    //コンストラクタ、minの方に一番下の頂点、maxの方に一番上の頂点
+    AABB(vec3f dmin, vec3f dmax)
+    {
+        bound[0] = dmin;
+        bound[1] = dmax;
+    }
+
+    vec3f center() const { return 0.5f * (bound[1] + bound[0]); }
+
+    int longestAxis()
+    {
+        const vec3f length = bound[1] - bound[0];
         if (length[0] >= length[1] && length[0] >= length[2])
         {
             return 0;
         }
-        // y
         else if (length[1] >= length[0] && length[1] >= length[2])
         {
             return 1;
         }
-        // z
         else
         {
             return 2;
         }
     }
 
-    bool intersect(const Ray &ray, const Vec3 &dirInv,
-                   const int dirInvSign[3]) const
+    bool intersect(Ray &ray, const vec3f &dirInv, const int dirInvSign[3]) const
     {
-        // https://dl.acm.org/doi/abs/10.1145/1198555.1198748
         float tmin, tmax, tymin, tymax, tzmin, tzmax;
-
-        tmin = (bounds[dirInvSign[0]][0] - ray.getorigin()[0]) * dirInv[0];
-        tmax = (bounds[1 - dirInvSign[0]][0] - ray.getorigin()[0]) * dirInv[0];
-        tymin = (bounds[dirInvSign[1]][1] - ray.getorigin()[1]) * dirInv[1];
-        tymax = (bounds[1 - dirInvSign[1]][1] - ray.getorigin()[1]) * dirInv[1];
+        tmin = (bound[dirInvSign[0]][0] - ray.origin[0]) * dirInv[0];
+        tmax = (bound[1 - dirInvSign[0]][0] - ray.origin[0]) * dirInv[0];
+        tymin = (bound[dirInvSign[1]][1] - ray.origin[1]) * dirInv[1];
+        tymax = (bound[1 - dirInvSign[1]][1] - ray.origin[1]) * dirInv[1];
         if (tmin > tymax || tymin > tmax)
             return false;
         if (tymin > tmin)
@@ -58,8 +56,8 @@ struct AABB
         if (tymax < tmax)
             tmax = tymax;
 
-        tzmin = (bounds[dirInvSign[2]][2] - ray.getorigin()[2]) * dirInv[2];
-        tzmax = (bounds[1 - dirInvSign[2]][2] - ray.getorigin()[2]) * dirInv[2];
+        tzmin = (bound[dirInvSign[2]][2] - ray.origin[2]) * dirInv[2];
+        tzmax = (bound[1 - dirInvSign[2]][2] - ray.origin[2]) * dirInv[2];
         if (tmin > tzmax || tzmin > tmax)
             return false;
         if (tzmin > tmin)
@@ -71,31 +69,33 @@ struct AABB
     }
 };
 
-inline AABB mergeAABB(const AABB &bbox, const Vec3 &p)
+inline AABB mergeAABB(const AABB &box, const vec3f pos)
 {
-    AABB ret;
-    for (int i = 0; i < 3; ++i)
+    AABB res;
+    for (int i = 0; i < 3; i++)
     {
-        ret.bounds[0][i] = std::min(bbox.bounds[0][i], p[i]);
-        ret.bounds[1][i] = std::max(bbox.bounds[1][i], p[i]);
+        res.bound[0][i] = min(box.bound[0][i], pos[i]);
+        res.bound[1][i] = max(box.bound[1][i], pos[i]);
     }
-    return ret;
+
+    return res;
 }
 
-inline AABB mergeAABB(const AABB &bbox1, const AABB &bbox2)
+inline AABB mergeAABB(const AABB &box1, const AABB &box2)
 {
-    AABB ret;
-    for (int i = 0; i < 3; ++i)
+    AABB res;
+    for (int i = 0; i < 3; i++)
     {
-        ret.bounds[0][i] = std::min(bbox1.bounds[0][i], bbox2.bounds[0][i]);
-        ret.bounds[1][i] = std::max(bbox1.bounds[1][i], bbox2.bounds[1][i]);
+        res.bound[0][i] = min(box1.bound[0][i], box2.bound[0][i]);
+        res.bound[1][i] = max(box1.bound[1][i], box2.bound[1][i]);
     }
-    return ret;
+    return res;
 }
 
 inline std::ostream &operator<<(std::ostream &stream, const AABB &bbox)
 {
-    stream << bbox.bounds[0] << ", " << bbox.bounds[1];
+    stream << bbox.bound[0] << ", " << bbox.bound[1];
     return stream;
 }
+
 #endif

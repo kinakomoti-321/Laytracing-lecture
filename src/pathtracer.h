@@ -78,7 +78,7 @@ vec3f Pathtracer(Ray &r, Scene &scene, RNGrandom &rng)
         IntersectInfo info;
         if (!scene.hit(ray, info))
         {
-            LTE = s;
+            LTE = 0;
             break;
         }
 

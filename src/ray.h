@@ -6,13 +6,12 @@ using vec3f = vec3<float>;
 class Ray
 {
 private:
-    vec3f origin;
-    vec3f direction;
-    float kyoyou = 1e-3f;
-
 public:
     float tmax{std::numeric_limits<float>::max()};
     float tmin{1e-3f};
+    vec3f origin;
+    vec3f direction;
+    float kyoyou = 1e-3f;
     Ray(vec3f o, vec3f d) : origin(o), direction(d)
     {
     }

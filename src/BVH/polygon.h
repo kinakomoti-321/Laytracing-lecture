@@ -1,74 +1,47 @@
-#ifndef _POLYGON_H_
-#define _POLYGON_H_
-
-#include "vec3.h"
+#ifndef _POLYGON_H
+#define _POLYGON_H
 #include <iostream>
-#include <array>
-#include <vector>
 #include <cassert>
+#include <array>
+#include "vec3.h"
+#include "BSDF.h"
+#include "geometry.h"
 
-using Vec3 = vec3f;
-struct Polygon : public Geometry
+class Polygon
 {
-    unsigned int nVertices; // 頂点数
-    float *vertices;        // 頂点座標の配列
-    unsigned int *indices;  // verticesへのインデックス配列
-    float *normals;         // 頂点ごとの法線の配列
-    float *uvs;             // 頂点ごとのUV座標の配列
-    int *geomIDs;
+public:
+    float *vertex;
+    unsigned int *index;
+    unsigned int nVertex;
+    BSDF *bsdf;
+    MaterialType material;
 
-    Polygon(unsigned int nVertices, float *vertices, unsigned int *indices,
-            float *normals = nullptr, float *uvs = nullptr,
-            int *geomIDs = nullptr)
-        : nVertices(nVertices),
-          vertices(vertices),
-          indices(indices),
-          normals(normals),
-          uvs(uvs),
-          geomIDs(geomIDs) {}
-    Polygon(unsigned int nVertices, float *vertices, unsigned int *indices, vec3f col) : nVertices(nVertices), vertices(vertices), indices(indices)
+    Polygon(unsigned int nvertex, float *vert, unsigned int *inde, MaterialType mater, BSDF *inbsdf) : nVertex(nvertex), vertex(vert), index(inde), material(mater), bsdf(inbsdf) {}
+
+    std::array<unsigned int, 3> getIndex(unsigned int FaceID)
     {
-        basecolor = col;
-        material = MaterialType::Emission;
-    }
-    // 指定した頂点座標の位置の頂点座標をVec3で取得する
-    Vec3 getVertex(unsigned int vertexIdx) const
-    {
-        assert(vertexIdx <= nVertices);
-        return Vec3(vertices[3 * vertexIdx], vertices[3 * vertexIdx + 1],
-                    vertices[3 * vertexIdx + 2]);
+        assert(FaceID <= nFaces());
+        return {index[3 * FaceID], index[3 * FaceID + 1], index[3 * FaceID + 2]};
     }
 
-    // 指定した面の頂点座標配列へのインデックスを取得する
-    std::array<unsigned int, 3> getIndices(unsigned int faceIdx) const
+    vec3f getVertex(unsigned int ind)
     {
-        assert(faceIdx <= nFaces());
-        return {indices[3 * faceIdx + 0], indices[3 * faceIdx + 1],
-                indices[3 * faceIdx + 2]};
+        return vec3f(vertex[3 * ind], vertex[3 * ind + 1], vertex[3 * ind + 2]);
     }
 
-    // 指定した頂点座標の位置の法線をVec3で取得する
-    Vec3 getNormal(unsigned int vertexIdx) const
+    unsigned int nFaces() const
     {
-        assert(vertexIdx <= nVertices);
-        return Vec3(normals[3 * vertexIdx], normals[3 * vertexIdx + 1],
-                    normals[3 * vertexIdx + 2]);
+        return nVertex / 3;
     }
 
-    // 指定した頂点座標の位置のUV座標を取得する
-    std::pair<float, float> getUV(unsigned int vertexIdx) const
+    MaterialType getMaterial() const
     {
-        assert(vertexIdx <= nVertices);
-        return {uvs[2 * vertexIdx], uvs[2 * vertexIdx + 1]};
+        return material;
     }
 
-    // 頂点ごとの法線が存在するか
-    bool hasNormals() const { return normals != nullptr; }
-    // 頂点ごとのUVが存在するか
-    bool hasUVs() const { return uvs != nullptr; }
-
-    // 面の数を返す
-    unsigned int nFaces() const { return nVertices / 3; };
+    BSDF *getBSDF() const
+    {
+        return bsdf;
+    }
 };
-
 #endif
