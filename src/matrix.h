@@ -109,6 +109,8 @@ inline std::ostream &operator<<(std::ostream &stream, const Matrix &mat)
     return stream;
 }
 
+
+
 // inline vector<float> vertexMatrix(Matrix &mat, const float *vertex, int nVertex)
 // {
 

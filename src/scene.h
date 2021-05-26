@@ -9,19 +9,18 @@
 #include "BVH/polygon.h"
 #include <vector>
 #include "BSDF.h"
+#include "BVH/simpleBVH.h"
 
 using namespace std;
 class Scene
 {
 private:
     vector<Geometry *> geometry;
-    // SimpleBVH BVH;
+    SimpleBVH BVH;
 
 public:
-    // Scene(Polygon &polygon) : BVH(SimpleBVH(polygon))
-    // {
-    // }
-    Scene() {}
+    Scene(Polygon &polygon) : BVH(SimpleBVH(polygon)) {}
+    // Scene() {}
 
     ~Scene()
     {
@@ -32,10 +31,10 @@ public:
         }
     }
 
-    // void Build()
-    // {
-    //     BVH.buildBVH();
-    // }
+    void Build()
+    {
+        BVH.buildBVH();
+    }
 
     // void hint()
     // {
@@ -75,14 +74,16 @@ public:
         }
     }
 
+    void addPolygonBVH(Polygon &polygon)
+    {
+        BVH.AddPolygon(polygon);
+    }
     bool hit(Ray &r, IntersectInfo &info)
     {
         float min = 10000;
         bool check = false;
-
         //BVH側の衝突判定
-        // check = BVH.intersect(r, info);
-
+        check = BVH.intersect(r, info);
         //各球に判定を行う
         for (int i = 0; i < geometry.size(); ++i)
         {
@@ -98,6 +99,7 @@ public:
                 }
             }
         }
+
         return check;
     }
 

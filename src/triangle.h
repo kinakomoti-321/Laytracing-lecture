@@ -104,5 +104,10 @@ public:
 
         return AABB(pMin, pMax);
     }
+
+    void faceCheck()
+    {
+        cout << FaceID << " :" << calcAABB().center() << endl;
+    }
 };
 #endif

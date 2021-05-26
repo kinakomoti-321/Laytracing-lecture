@@ -6,7 +6,7 @@
 class Geometry;
 struct IntersectInfo
 {
-    float distance = NULL;
+    float distance = 10000.0;
     vec3f position;
     vec3f normal;
     Geometry *geometry;

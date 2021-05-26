@@ -26,11 +26,11 @@ string objname = "teapot.obj";
 int main()
 {
 
-  int sampling = 1;
+  int sampling = 100;
   const unsigned int width = 512;
   const unsigned int height = 512;
   Image img(width, height);
-  vec3f camPos(0, 3, 7.5);
+  vec3f camPos(0, 0, 7.5);
   vec3f lookAt(0, 0, 0);
   lookAt = lookAt - camPos;
   lookAt = normalize(lookAt);
@@ -93,6 +93,13 @@ int main()
       4,
       5,
   };
+  float vertex10[24];
+  for (int i = 0; i < 8; ++i)
+  {
+    vertex10[3 * i] = 8 * vertex2[3 * i];
+    vertex10[3 * i + 1] = 8 * vertex2[3 * i + 1];
+    vertex10[3 * i + 2] = 8 * vertex2[3 * i + 2];
+  }
   vector<int> index2 = {0, 1, 2, 0, 2, 3, 4, 6, 7, 4, 5, 6};
   for (int i = 0; i < vertex1.size(); i++)
   {
@@ -106,8 +113,15 @@ int main()
   bsdf.push_back(new Mirror(vec3f(0.9f)));
   bsdf.push_back(new Glass(vec3f(1.0), 1.54));
   vec3f col(0.9);
-  Polygon poly(36, vertex2, index, MaterialType::Emission, bsdf[1]);
-  Scene scene;
+  Polygon poly(36, vertex2, index, MaterialType::Diffuse, bsdf[1]);
+  Polygon poly1(36, vertex10, index, MaterialType::Diffuse, bsdf[0]);
+  Scene scene(poly);
+  scene.addPolygonBVH(poly1);
+
+  float vert[] = {4, 7.5, 4, -4, 7.5, 4, -4, 7.5, -4, 4, 7.5, -4};
+  unsigned int idx[] = {0, 1, 2, 0, 2, 3};
+  Polygon poly2(6, vert, idx, MaterialType::Emission, bsdf[1]);
+  scene.addPolygonBVH(poly2);
   vector<int> index3(std::begin(index), std::end(index));
   vector<vec3f> vertexlight = {vec3f(1, 0, 1), vec3f(1, 0, -1), vec3f(-1, 0, 1), vec3f(-1, 0, -1)};
   vector<int> indexlight = {0, 1, 2, 1, 2, 3};
@@ -116,7 +130,7 @@ int main()
   {
     vertexlight[i] = MoveMat(vec3f(0, 7.8, 0)) * ScaleMat(vec3f(4)) * vertexlight[i];
   }
-  scene.addPolygon(&poly);
+  // scene.addPolygon(&poly);
 
   for (int i = 0; i < vertex1.size(); i++)
   {
@@ -125,15 +139,16 @@ int main()
   vector<int> index4 = {1, 2, 5, 2, 5, 6};
   // scene.polygon(vertex1, index1, vec3f(0.9), MaterialType::Diffuse, bsdf[0]);
   // scene.polygon(vertex1, index2, vec3f(0), MaterialType::Mirror, bsdf[4]);
-  // scene.SphereAdd(MoveMat(vec3f(0, -4, -6)) * vec3f(-5, 0, 0), 2.0f, vec3f(0.8, 0.2, 0.2), MaterialType::Diffuse, bsdf[4]);
-  // scene.SphereAdd(MoveMat(vec3f(0, -4, -6)) * vec3f(5, 0, 0), 2.0, vec3f(0.2, 0.2, 0.8), MaterialType::Diffuse, bsdf[2]);
-  // scene.SphereAdd(MoveMat(vec3f(0, -4, -6)) * vec3f(0), 2.0f, vec3f(0.2, 0.8, 0.2), MaterialType::Diffuse, bsdf[3]);
-  // scene.SphereAdd(vec3f(2, -2, -2), 2.0, vec3f(1), MaterialType::Glass, bsdf[5]);
-  // scene.RectangleAdd(MoveMat(vec3f(0, 8, 0)) * vec3f(0), vec3f(0, -1, 0), vec3f(0.9), MaterialType::Diffuse);
+  // scene.SphereAdd(MoveMat(vec3f(0, -4, -6)) * vec3f(-5, 0, 0), 2.0f, MaterialType::Diffuse, bsdf[4]);
+  // scene.SphereAdd(MoveMat(vec3f(0, -4, -6)) * vec3f(5, 0, 0), 2.0, MaterialType::Diffuse, bsdf[2]);
+  // scene.SphereAdd(MoveMat(vec3f(0, -4, -6)) * vec3f(0), 2.0f, MaterialType::Diffuse, bsdf[3]);
+  // scene.SphereAdd(vec3f(2, -2, -2), 2.0, MaterialType::Glass, bsdf[5]);
+  // scene.RectangleAdd(MoveMat(vec3f(0, 8, 0)) * vec3f(0), vec3f(0, -1, 0), MaterialType::Diffuse, bsdf[0]);
   cout << "Scene Set Complete" << endl;
   cout << "Pathtracing start" << endl;
+  scene.Build();
   int i = 0;
-  AABB box(vec3f(-1), vec3f(1));
+  // AABB box(vec3f(-1), vec3f(1));
 // #pragma omp parallel for schedule(dynamic, 1)
 #pragma omp parallel for private(i) collapse(2)
   for (int j = 0; j < height; ++j)
@@ -149,19 +164,19 @@ int main()
         Ray r = camera.getray(v, u);
 
         // samplecolor = samplecolor + vec3f(Pathtracer(r, scene, rng));
-        // samplecolor = samplecolor + Pathtracer(r, scene, rng);
+        samplecolor = samplecolor + Pathtracer(r, scene, rng);
         // cout << samplecolor << endl;
         // samplecolor = samplecolor - normalCheck(r, scene);
-        vec3f rinv(1.0f / r.direction[0], 1 / r.direction[1], 1 / r.direction[2]);
-        int dirInvSign[3];
-        for (int i = 0; i < 3; i++)
-        {
-          dirInvSign[i] = rinv[i] > 0 ? 0 : 1;
-        }
-        if (box.intersect(r, rinv, dirInvSign))
-        {
-          samplecolor = samplecolor + vec3f(1);
-        }
+        // vec3f rinv(1.0f / r.direction[0], 1 / r.direction[1], 1 / r.direction[2]);
+        // int dirInvSign[3];
+        // for (int i = 0; i < 3; i++)
+        // {
+        //   dirInvSign[i] = rinv[i] > 0 ? 0 : 1;
+        // }
+        // if (box.intersect(r, rinv, dirInvSign))
+        // {
+        //   samplecolor = samplecolor + vec3f(1);
+        // }
       }
       samplecolor = samplecolor / static_cast<float>(sampling);
       img.SetPixel(i, j, samplecolor);

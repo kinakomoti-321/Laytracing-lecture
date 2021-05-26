@@ -51,7 +51,7 @@ private:
         }
 
         const int nPrim = primEnd - primStart;
-        if (nPrim <= 4)
+        if (nPrim <= 2)
         {
             return createLeafNode(node, bbox, primStart, nPrim);
         }
@@ -65,7 +65,7 @@ private:
         const int splitAxis = splitAABB.longestAxis();
 
         const int splitIdx = primStart + nPrim / 2;
-        std::nth_element(primitives.begin() + primStart, primitives.begin() + splitIdx, primitives.begin() + primEnd, [&](const auto &prim1, const auto &prim2) { return prim1.calcAABB().center()[splitAxis] < prim2.calcAABB().center()[splitAxis]; });
+        std::nth_element(primitives.begin() + primStart, primitives.begin() + splitIdx, primitives.begin() + primEnd, [&](auto &prim1, auto &prim2) { return prim1.calcAABB().center()[splitAxis] < prim2.calcAABB().center()[splitAxis]; });
 
         // 分割が失敗した場合は葉ノードを作成
         if (splitIdx == primStart || splitIdx == primEnd)
@@ -89,6 +89,12 @@ private:
         node->child[0] = buildBVHNode(primStart, splitIdx);
         node->child[1] = buildBVHNode(splitIdx, primEnd);
         stats.nInternalNodes++;
+        cout << bbox << endl;
+        for (int i = 0; i < primitives.size(); ++i)
+        {
+            primitives[i].faceCheck();
+        }
+        cout << endl;
         return node;
     }
 
@@ -114,11 +120,7 @@ private:
                     IntersectInfo sect;
                     if (primitives[i].hit(ray, sect))
                     {
-                        if (info.distance == NULL)
-                        {
-                            info = sect;
-                        }
-                        else if (sect.distance < info.distance)
+                        if (sect.distance < info.distance)
                         {
                             info = sect;
                         }
@@ -137,7 +139,15 @@ private:
     }
 
 public:
-    SimpleBVH(const Polygon &polygon)
+    SimpleBVH(Polygon &polygon)
+    {
+        for (unsigned int f = 0; f < polygon.nFaces(); ++f)
+        {
+            primitives.emplace_back(&polygon, f);
+        }
+    }
+
+    void AddPolygon(Polygon &polygon)
     {
         for (unsigned int f = 0; f < polygon.nFaces(); ++f)
         {
