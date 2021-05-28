@@ -7,6 +7,8 @@ option(BUILD_REFERENCE "build reference raytracer" ON)
 # openMP
 find_package(OpenMP)
 
+#extern 
+add_subdirectory("extern")
 
 # main
 add_executable(main src/main.cpp)

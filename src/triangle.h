@@ -75,14 +75,7 @@ public:
         info.distance = t;
         info.geometry = this;
 
-        if (dot(ray.getdirection(), normal) < 0)
-        {
-            info.normal = normal;
-        }
-        else
-        {
-            info.normal = -normal;
-        }
+        info.normal = normal;
 
         return true;
     }

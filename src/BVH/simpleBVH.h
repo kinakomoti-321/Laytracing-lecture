@@ -89,12 +89,12 @@ private:
         node->child[0] = buildBVHNode(primStart, splitIdx);
         node->child[1] = buildBVHNode(splitIdx, primEnd);
         stats.nInternalNodes++;
-        cout << bbox << endl;
-        for (int i = 0; i < primitives.size(); ++i)
-        {
-            primitives[i].faceCheck();
-        }
-        cout << endl;
+        // cout << bbox << endl;
+        // for (int i = 0; i < primitives.size(); ++i)
+        // {
+        //     primitives[i].faceCheck();
+        // }
+        // cout << endl;
         return node;
     }
 
