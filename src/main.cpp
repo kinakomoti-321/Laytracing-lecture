@@ -69,7 +69,7 @@ bool loadObj(const std::string &filename, std::vector<float> &vertices,
 
 int main()
 {
-  int sampling = 100;
+  int sampling = 1;
   const unsigned int width = 512;
   const unsigned int height = 512;
   vector<float> vertices;
