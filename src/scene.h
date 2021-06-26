@@ -8,18 +8,79 @@
 #include "triangle.h"
 #include "BVH/polygon.h"
 #include <vector>
+#include <cmath>
 #include "BSDF.h"
 #include "BVH/simpleBVH.h"
+#include "Picture/Texture.h"
 
 using namespace std;
+
+class WorldSphere
+{
+private:
+    float radiance = 10000;
+    WorldTexture *tex = nullptr;
+
+public:
+    WorldSphere(WorldTexture *intex)
+    {
+        tex = intex;
+    }
+
+    vec3f hit(Ray &r)
+    {
+        // cout << "check" << endl;
+        float b = dot(r.getdirection(), r.getorigin());
+        vec3f alpha = r.getorigin();
+        float c = alpha.norm() * alpha.norm() - radiance * radiance;
+        float D = b * b - c;
+
+        if (D < 0)
+            return false;
+
+        float t1 = -b + sqrt(D);
+        float t2 = -b - sqrt(D);
+
+        float t = t2;
+        if (t < 1e-3f)
+        {
+            t = t1;
+            if (t < 1e-3f)
+            {
+                return false;
+            }
+        }
+
+        vec3f position = r.post(t);
+        vec3f pos = normalize(position);
+        float theta = acos(pos[1]);
+        float phi = acos(pos[0] / sqrt(pos[0] * pos[0] + pos[2] * pos[2]));
+        if (pos[2] < 0.0)
+        {
+            phi *= -1;
+        }
+
+        float u = theta / M_PI;
+        float v = (phi + M_PI) / (2 * M_PI);
+        v = 1 - v;
+        if (u > 1.0 || u < 0.0)
+            cout << u << " : " << v << endl;
+        return tex->getTex(v, u);
+        // return vec3f(u, v, 0.0);
+    }
+};
+
 class Scene
 {
 private:
     vector<Geometry *> geometry;
     SimpleBVH BVH;
+    WorldSphere *worldsphere = nullptr;
 
 public:
-    Scene(Polygon &polygon) : BVH(SimpleBVH(polygon)) {}
+    Scene(Polygon &polygon) : BVH(SimpleBVH(polygon))
+    {
+    }
     // Scene() {}
 
     ~Scene()
@@ -36,12 +97,11 @@ public:
         BVH.buildBVH();
     }
 
-    // void hint()
-    // {
-    //     cout << BVH.nInternalNodes() << endl;
-    //     cout << BVH.nLeafNodes() << endl;
-    //     cout << BVH.nNodes() << endl;
-    // }
+    void worldSet(WorldSphere *world)
+    {
+        worldsphere = world;
+    }
+
     void SphereAdd(const vec3f &origin, const float &f)
     {
         Geometry *geo = new Sphere(f, origin);
@@ -58,13 +118,6 @@ public:
         geometry.push_back(geo);
     }
 
-    // void PyramidAdd(const vec3f vertex[4], const vec3f color, const MaterialType mater)
-    // {
-    //     TriangleAdd(vertex[0], vertex[1], vertex[2], color, mater);
-    //     TriangleAdd(vertex[0], vertex[1], vertex[3], color, mater);
-    //     TriangleAdd(vertex[1], vertex[2], vertex[3], color, mater);
-    //     TriangleAdd(vertex[0], vertex[2], vertex[3], color, mater);
-    // }
     void addPolygon(Polygon *polygon)
     {
         for (int i = 0; i < polygon->nFaces(); i++)
@@ -80,7 +133,6 @@ public:
     }
     bool hit(Ray &r, IntersectInfo &info)
     {
-        float min = 10000;
         bool check = false;
         //BVH側の衝突判定
         check = BVH.intersect(r, info);
@@ -91,9 +143,8 @@ public:
             //一番近い点を取得する。
             if (geometry[i]->hit(r, checkinfo))
             {
-                if (checkinfo.distance < min)
+                if (checkinfo.distance < info.distance)
                 {
-                    min = checkinfo.distance;
                     info = checkinfo;
                     check = true;
                 }
@@ -107,5 +158,15 @@ public:
     {
         cout << geometry.size() << endl;
     }
+
+    vec3f worldBackGround(Ray &r)
+    {
+        if (worldsphere != nullptr)
+        {
+            return worldsphere->hit(r);
+        }
+        return vec3f(0.0);
+    }
 };
+
 #endif

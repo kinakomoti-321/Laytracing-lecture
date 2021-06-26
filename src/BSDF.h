@@ -24,17 +24,20 @@ vec3f sampleHemisphere(float u, float v, float &pdf)
 class BSDF
 {
 public:
+    vec3f rho;
+    float ior;
     virtual vec3f reBSDF(const vec3f &wo, const vec3f &wi) { return 0; }
     virtual vec3f sampling(RNGrandom &rng, const vec3f &wo, vec3f &wi, float &pdf) { return 0; }
 };
 
 class Lambert : public BSDF
 {
-private:
-    const vec3f rho;
 
 public:
-    Lambert(const vec3f rho) : rho(rho) {}
+    Lambert(const vec3f irho)
+    {
+        rho = irho;
+    }
 
     vec3f reBSDF(const vec3f &wo, const vec3f &wi)
     {
@@ -49,11 +52,11 @@ public:
 
 class Mirror : public BSDF
 {
-private:
-    const vec3f rho;
-
 public:
-    Mirror(const vec3f &rho) : rho(rho) {}
+    Mirror(const vec3f &irho)
+    {
+        rho = irho;
+    }
 
     vec3f reBSDF(const vec3f &wo, const vec3f &wi)
     {
@@ -73,12 +76,12 @@ public:
 
 class Glass : public BSDF
 {
-private:
-    const vec3f rho;
-    const float ior;
-
 public:
-    Glass(const vec3f &rho, float ior) : rho(rho), ior(ior) {}
+    Glass(const vec3f &irho, float iior)
+    {
+        rho = irho;
+        ior = iior;
+    }
     vec3f reBSDF(const vec3f &wo, const vec3f &wi) const
     {
         return vec3f(0);
@@ -134,4 +137,67 @@ public:
         }
     }
 };
+inline float expo2(float a)
+{
+    return a * a;
+}
+class TorranceSparrow : public BSDF
+{
+public:
+    float roughness;
+    vec3f F0;
+
+    TorranceSparrow(vec3f inrho, vec3f inF0, float inroughness)
+    {
+        rho = inrho;
+        roughness = inroughness;
+        F0 = inF0;
+    }
+    vec3f sampling(RNGrandom &rng, const vec3f &wo, vec3f &wi, float &pdf)
+    {
+        vec3f n(0, 1, 0);
+        vec3f wout = -1.0f * wo;
+        wi = sampleHemisphere(rng.getRandom(), rng.getRandom(), pdf);
+        vec3f half = wo + wi;
+        half = normalize(half);
+
+        float VdotN = dot(wout, n);
+        float LdotN = dot(wi, n);
+        float HdotN = dot(half, n);
+        float LdotH = dot(wi, half);
+
+        float alpha = roughness * roughness;
+        float alpha2 = alpha * alpha;
+
+        float D = DGGX(alpha2, HdotN);
+        float G = GHCMS(alpha2, VdotN, LdotN);
+        vec3f F = FresnelTerm(LdotH);
+
+        vec3f bsdf = D * G * F / (4 * abs(LdotN) * abs(VdotN) * abs(wi[1]));
+        // cout << bsdf << endl;
+        return vec3f(bsdf);
+    }
+
+    float DGGX(float alpha2, float HdotN)
+    {
+        float HdotN2 = HdotN * HdotN;
+        float d = 1 - (1 - alpha2) * HdotN2;
+
+        return alpha2 / (M_PI * d);
+    }
+
+    float GHCMS(float alpha2, float VdotN, float LdotN)
+    {
+        float lambdal = (-1 + sqrt(1 + alpha2 * (1 / (LdotN * LdotN) - 1))) / 2.0;
+        float lambdav = (-1 + sqrt(1 + alpha2 * (1 / (VdotN * VdotN) - 1))) / 2.0;
+
+        return 1 / (1 + lambdal + lambdav);
+    }
+
+    vec3f FresnelTerm(float LdotH)
+    {
+        return F0 + (vec3f(1.0) - F0) * (float)pow(1.0 - LdotH, 5);
+    }
+};
+
 #endif

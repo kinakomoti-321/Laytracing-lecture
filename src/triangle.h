@@ -35,12 +35,12 @@ public:
     bool hit(Ray &ray, IntersectInfo &info)
     {
         const auto index = polygon->getIndex(FaceID);
-        vec3f v[3];
-        v[0] = polygon->getVertex(index[0]);
-        v[1] = polygon->getVertex(index[1]);
-        v[2] = polygon->getVertex(index[2]);
-        vec3f e1 = v[1] - v[0];
-        vec3f e2 = v[2] - v[0];
+        vec3f v1, v2, v3;
+        v1 = polygon->getVertex(index[0]);
+        v2 = polygon->getVertex(index[1]);
+        v3 = polygon->getVertex(index[2]);
+        vec3f e1 = v2 - v1;
+        vec3f e2 = v3 - v1;
 
         vec3f alpha = closs(ray.getdirection(), e2);
         float det = dot(e1, alpha);
@@ -49,7 +49,7 @@ public:
             return false;
 
         float invDet = 1.0f / det;
-        vec3f r = ray.getorigin() - v[0];
+        vec3f r = ray.getorigin() - v1;
 
         float u = dot(alpha, r) * invDet;
         if (u < 0.0f || u > 1.0f)
@@ -59,8 +59,8 @@ public:
 
         vec3f beta = closs(r, e1);
 
-        float f = dot(ray.getdirection(), beta) * invDet;
-        if (f < 0.0f || u + f > 1.0f)
+        float v = dot(ray.getdirection(), beta) * invDet;
+        if (v < 0.0f || u + v > 1.0f)
         {
             return false;
         }
@@ -75,8 +75,23 @@ public:
         info.distance = t;
         info.geometry = this;
 
-        info.normal = normal;
+        float w = 1.0f - u - v;
+        if (polygon->hasUV())
+        {
+            const auto uv1 = polygon->getUV(index[0]);
+            const auto uv2 = polygon->getUV(index[1]);
+            const auto uv3 = polygon->getUV(index[2]);
 
+            info.uv[0] = w * uv1.first + u * uv2.first + v * uv3.first;
+            info.uv[1] = w * uv1.second + u * uv2.second + v * uv3.second;
+        }
+        else
+        {
+            info.uv[0] = u;
+            info.uv[1] = v;
+        }
+        info.poly = polygon;
+        info.normal = normal;
         return true;
     }
 

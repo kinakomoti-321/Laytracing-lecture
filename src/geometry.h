@@ -6,6 +6,7 @@
 #include "rng.h"
 #include <math.h>
 #include "BSDF.h"
+#include "./Picture/Texture.h"
 
 struct IntersectInfo;
 enum class MaterialType

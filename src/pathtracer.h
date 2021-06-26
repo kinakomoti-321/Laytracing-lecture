@@ -54,7 +54,7 @@ vec3f Pathtracer(Ray &r, Scene &scene, RNGrandom &rng)
     //ロシアンルーレット用の確率
     float p = 0.99;
     //最大反射回数
-    int MaxRef = 100;
+    int MaxRef = 10;
 
     //計算結果
     vec3f LTE(0.0);
@@ -78,14 +78,14 @@ vec3f Pathtracer(Ray &r, Scene &scene, RNGrandom &rng)
         IntersectInfo info;
         if (!scene.hit(ray, info))
         {
-            LTE = 0;
+            LTE = adamarl(s, scene.worldBackGround(ray));
             break;
         }
 
         if (info.geometry->getMaterial() == MaterialType::Emission)
         {
 
-            LTE = (float)2.0 * s;
+            LTE = (float)5.0 * s;
             break;
         }
 
@@ -97,7 +97,7 @@ vec3f Pathtracer(Ray &r, Scene &scene, RNGrandom &rng)
         vec3f wo = worldtoLocal(-ray.getdirection(), t, info.normal, b);
         float pdf;
         vec3f direction_tangent;
-        bsdf = info.geometry->bsdf->sampling(rng, wo, direction_tangent, pdf);
+        bsdf = info.poly->getBSDF(rng, wo, direction_tangent, pdf, info.uv[0], info.uv[1]);
         //sampleHemisphere(rng.getRandom(), rng.getRandom());
         // 接空間からワールド座標系への変換
         const vec3f nextdirection =
@@ -130,4 +130,24 @@ vec3f normalCheck(Ray &r, Scene &scene)
     return vec3f(1.0);
 }
 
+vec3f uvcheck(Ray &r, Scene &scene)
+{
+    IntersectInfo info;
+    if (scene.hit(r, info))
+    {
+        return vec3f(info.uv[0], info.uv[1], 0.0);
+    }
+    return vec3f(1.0);
+}
+
+vec3f texcheck(Ray &r, Scene &scene)
+{
+    IntersectInfo info;
+    if (scene.hit(r, info))
+    {
+        return info.poly->tex->getTex(info.uv[0], info.uv[1]);
+    }
+
+    return vec3f(0.0);
+}
 #endif

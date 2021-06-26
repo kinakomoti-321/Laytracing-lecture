@@ -51,7 +51,7 @@ private:
         }
 
         const int nPrim = primEnd - primStart;
-        if (nPrim <= 2)
+        if (nPrim <= 4)
         {
             return createLeafNode(node, bbox, primStart, nPrim);
         }
@@ -65,7 +65,8 @@ private:
         const int splitAxis = splitAABB.longestAxis();
 
         const int splitIdx = primStart + nPrim / 2;
-        std::nth_element(primitives.begin() + primStart, primitives.begin() + splitIdx, primitives.begin() + primEnd, [&](auto &prim1, auto &prim2) { return prim1.calcAABB().center()[splitAxis] < prim2.calcAABB().center()[splitAxis]; });
+        std::nth_element(primitives.begin() + primStart, primitives.begin() + splitIdx, primitives.begin() + primEnd, [&](auto &prim1, auto &prim2)
+                         { return prim1.calcAABB().center()[splitAxis] < prim2.calcAABB().center()[splitAxis]; });
 
         // 分割が失敗した場合は葉ノードを作成
         if (splitIdx == primStart || splitIdx == primEnd)

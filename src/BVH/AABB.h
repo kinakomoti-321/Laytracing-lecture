@@ -14,7 +14,7 @@ public:
     AABB()
     {
         bound[0] = vec3f(std::numeric_limits<float>::max());
-        bound[1] = vec3f(std::numeric_limits<float>::min());
+        bound[1] = vec3f(-std::numeric_limits<float>::max());
     }
     //コンストラクタ、minの方に一番下の頂点、maxの方に一番上の頂点
     AABB(vec3f dmin, vec3f dmax)

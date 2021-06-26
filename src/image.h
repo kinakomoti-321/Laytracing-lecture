@@ -43,6 +43,15 @@ public:
     {
         return height;
     }
+    vec3f getPixel(unsigned int u, unsigned int v)
+    {
+        if (u >= width || u < 0 || v >= height || v < 0)
+        {
+            cout << "uvが正規化されていません" << endl;
+            return vec3f(0);
+        }
+        return vec3f(pixel[3 * u + 3 * width * v], pixel[3 * u + 3 * width * v + 1], pixel[3 * u + 3 * width * v + 2]);
+    }
 
     void SetPixel(unsigned int i, unsigned int j, const vec3<float> &RGB)
     {
